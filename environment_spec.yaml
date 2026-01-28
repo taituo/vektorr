@@ -1,0 +1,799 @@
+# ============================================================
+# BOTBET ENVIRONMENT SPECIFICATION
+# ============================================================
+# Tier-pohjainen ympäristökuvaus pienimmästä suurimpaan.
+# Jokainen tier sisältää: infra, konffi, riski, rahoitus.
+# ============================================================
+
+# ------------------------------------------------------------
+# TIER 0 — LOCAL DEV / E2E MOCK
+# ------------------------------------------------------------
+# Ei API-avaimia, ei rahaa, ei ulkoisia yhteyksiä.
+# Tarkoitus: kehitys, debuggaus, putken validointi.
+# ------------------------------------------------------------
+tier_0_local:
+  name: "Local Dev / E2E Mock"
+  purpose: "Kehitys ja integraatiotestaus mock-datalla"
+
+  infra:
+    machine: "Oma kone (macOS/Linux)"
+    docker: true                       # QuestDB konttina
+    external_network: false
+
+  services:
+    questdb:
+      image: questdb/questdb:latest
+      ports: [9000, 9009]
+      storage: docker volume (ephemeral)
+    mock_server:
+      command: "python tools/mock_server.py --port 9999 --matches 3 --speed 2"
+      data: "Generoitu EPL-data, 90 min = ~3 min reaaliajassa"
+    brain:
+      command: "cd brain && uvicorn service:app --port 8090"
+      workers: 1
+    spine:
+      command: >
+        cd spine && cargo run --
+        --events-url http://localhost:9999/events
+        --odds-url http://localhost:9999/odds
+        --brain-url http://localhost:8090
+        --qdb-host localhost
+    execution:
+      mode: dry_run
+    monitor:
+      command: "python monitor.py"
+
+  credentials:
+    sportmonks_token: null
+    odds_api_key: null
+    betfair: null
+
+  risk:
+    mode: dry_run
+    wallet: 0                          # Ei oikeaa rahaa
+    stake: 0
+    max_bets_per_match: 1
+
+  finance:
+    monthly_cost_eur: 0
+    api_costs: 0
+    exchange_deposits: 0
+
+  quickstart: |
+    bash tools/run_e2e.sh
+
+
+# ------------------------------------------------------------
+# TIER 1 — PAPER TRADING (LIVE DATA)
+# ------------------------------------------------------------
+# Oikea data, ei oikeaa rahaa. Validoi signaalit ja latenssi.
+# ------------------------------------------------------------
+tier_1_paper:
+  name: "Paper Trading — Live Data"
+  purpose: "Signaalien validointi oikealla datalla ilman taloudellista riskiä"
+
+  infra:
+    machine: "Oma kone tai halpa VPS (1 vCPU, 2 GB RAM)"
+    docker: true
+    external_network: true             # API-kutsut providereihin
+
+  services:
+    questdb:
+      image: questdb/questdb:latest
+      ports: [9000, 9009]
+      storage: "docker volume, ~500 MB/kk"
+    brain:
+      command: "cd brain && uvicorn service:app --port 8090"
+      workers: 1
+    spine:
+      command: >
+        cd spine && cargo run --
+        --provider-config spine/provider_config.yaml
+        --brain-url http://localhost:8090
+        --qdb-host localhost
+      providers: [sportmonks, odds_api]
+    execution:
+      mode: dry_run
+      log_to_questdb: true
+    monitor:
+      command: "python monitor.py"
+
+  credentials:
+    sportmonks_token: required         # Free tier: 500 req/h
+    odds_api_key: required             # Free tier: 500 req/kk
+    betfair: null
+
+  risk:
+    mode: dry_run
+    wallet: 1000.0                     # Virtuaalinen
+    stake: 10.0
+    max_bets_per_match: 1
+
+  brain_config:
+    L_MAX: 3.0                         # Latency gate
+    EV_MIN: 0.05                       # 5% edge min
+    XG_10M_MIN: 0.2
+    MAX_BETS_PER_MATCH: 1
+
+  finance:
+    monthly_cost_eur: 0-20
+    api_costs:
+      sportmonks: "0 (free tier riittää 1-2 liigalle)"
+      odds_api: "0 (free 500 req/kk)"
+    exchange_deposits: 0
+
+  success_criteria: |
+    - 2 viikon paper trading jakso
+    - ROI% > 0 (virtuaalinen)
+    - Latency P95 < 3s
+    - Ei virheitä putkessa 48h yhtäjaksoisesti
+    - Vähintään 20 BET_READY -päätöstä
+
+
+# ------------------------------------------------------------
+# TIER 1B — MASSIVE PAPER TRADING (OPPIMINEN)
+# ------------------------------------------------------------
+# Oikea data, kaikki liigat, pitkä jakso.
+# Tarkoitus: kerää valtava dataset, optimoi parametrit,
+# validoi edge tilastollisesti ENNEN yhtään oikeaa euroa.
+# Tämä on tärkein tier — tässä opitaan tai hävitään.
+# ------------------------------------------------------------
+tier_1b_massive_paper:
+  name: "Massive Paper Trading — Learning Phase"
+  purpose: >
+    Kerää kuukausien data kaikista liigoista, aja tuhansia
+    virtuaalisia vetoja, optimoi Brain-parametrit ja validoi
+    edge tilastollisesti ennen oikean rahan riskiä.
+
+  infra:
+    machine: "VPS 2 vCPU, 4 GB RAM, SSD (Hetzner CAX21 ~7 EUR/kk)"
+    docker: true
+    external_network: true
+    uptime_target: "95%"               # Ei kriittinen, dataa voi paikata
+
+  services:
+    questdb:
+      storage: "20 GB SSD"
+      retention: "Kaikki data säilytetään — tämä ON tuote"
+      backup: "Viikottainen dump CSV:ksi"
+      expected_data:
+        events_per_month: "~50k-100k rivejä"
+        odds_per_month: "~200k-500k rivejä"
+        decisions_per_month: "~50k-100k rivejä"
+    brain:
+      workers: 1
+      mode: "Tuottaa päätöksiä, loggaa kaikki — myös hylätyt"
+    spine:
+      providers: [sportmonks, odds_api]
+      leagues:                         # KAIKKI tuetut liigat
+        - "Premier League"
+        - "La Liga"
+        - "Serie A"
+        - "Bundesliga"
+        - "Ligue 1"
+        - "Veikkausliiga"
+        - "Allsvenskan"
+        - "Eliteserien"
+    execution:
+      mode: dry_run
+      log_to_questdb: true
+      simulate_fills: true             # Simuloi Betfair fill/reject
+      simulated_reject_rate: 0.20
+      simulated_slippage: 0.05
+    monitor:
+      command: "python monitor.py"
+      alerts: false
+
+  credentials:
+    sportmonks_token: required         # Paid plan tarvitaan 8 liigalle
+    odds_api_key: required             # Paid plan
+    betfair: null                      # EI TARVITA
+
+  # ----- VIRTUAALINEN PORTFOLIO (suhteessa eri tiereihin) -----
+  paper_portfolios:
+    # Ajetaan RINNAKKAIN useita virtuaalikassoja
+    # jotta nähdään miten parametrit skaalautuvat
+    micro:
+      description: "Simuloi Tier 2 -kassaa"
+      wallet: 200.0
+      stake: 2.0
+      max_bets_per_match: 1
+      max_daily_loss: 20.0
+    small:
+      description: "Simuloi Tier 3 -kassaa"
+      wallet: 1000.0
+      stake: 10.0
+      max_bets_per_match: 1
+      max_daily_loss: 50.0
+    medium:
+      description: "Simuloi Tier 4 -kassaa"
+      wallet: 5000.0
+      stake: 25.0
+      max_bets_per_match: 2
+      max_daily_loss: 250.0
+
+  # ----- PARAMETRI-SWEEP -----
+  # Aja Brain eri parametreilla ja vertaa tuloksia
+  parameter_sweeps:
+    L_MAX: [2.0, 2.5, 3.0, 4.0]
+    EV_MIN: [0.02, 0.03, 0.05, 0.08, 0.10]
+    XG_10M_MIN: [0.10, 0.15, 0.20, 0.30]
+    MAX_BETS_PER_MATCH: [1, 2, 3]
+
+  # Sweepien kombinaatioita: 4 * 5 * 4 * 3 = 240
+  # Jokainen ajetaan samaa historiallista dataa vasten
+  # → backtest-työkalu lukee QuestDB:stä ja simuloi
+
+  risk:
+    mode: dry_run
+    wallet: "paper_portfolios (yllä)"
+    stake: "paper_portfolios (yllä)"
+
+  brain_config:
+    # Oletusarvot — sweep testaa muita
+    L_MAX: 3.0
+    EV_MIN: 0.05
+    XG_10M_MIN: 0.2
+    MAX_BETS_PER_MATCH: 1
+    REJECT_RATE: 0.20                  # Realistinen Betfair-simulaatio
+    MAX_SLIPPAGE: 0.10
+
+  finance:
+    monthly_cost_eur: 30-60
+    breakdown:
+      vps: 7
+      sportmonks: "20-40 (paid, 8 liigaa)"
+      odds_api: "10-20 (paid)"
+    exchange_deposits: 0
+    total_initial_investment: 0        # Ei oikeaa rahaa
+
+  # ----- OPPIMISMETRIIKAT -----
+  learning_metrics:
+    data_collection:
+      - "Otteluita seurattu (tavoite: 500+)"
+      - "Tapahtumia kerätty (tavoite: 100k+)"
+      - "Odds-rivejä kerätty (tavoite: 500k+)"
+    signal_quality:
+      - "BET_READY rate per liiga"
+      - "TPS-jakauma: LOW/MID/PRESS/CHAOS %"
+      - "xG-tarkkuus vs. toteutuneet maalit"
+    paper_performance:
+      - "ROI% per liiga per kuukausi"
+      - "Sharpe ratio (viikko-windowilla)"
+      - "Max drawdown per portfolio"
+      - "Win rate vs. average odds"
+      - "CLV (Closing Line Value) — vedon hinta vs. closing odds"
+    parameter_insights:
+      - "Paras EV_MIN per liiga"
+      - "Optimaalinen L_MAX (latenssi vs. volyymi trade-off)"
+      - "Kelly-kerroin vs. flat stake vertailu"
+
+  duration: "2-6 kuukautta"
+  min_sample_size: "200+ virtuaalista vetoa per portfolio"
+
+  success_criteria: |
+    - Vähintään 500 ottelua dataa
+    - Vähintään 200 BET_READY päätöstä per portfolio
+    - Ainakin yksi parametrikombinaatio:
+      - ROI > 3% (1000+ vedon näyte)
+      - Sharpe > 1.0
+      - CLV > 0 (lyö closing line)
+    - Ymmärrys liigakohtaisista eroista
+    - Dokumentoitu paras parametrisetti per tier
+
+  output: |
+    Tier 1B:n lopputuotokset ennen Tier 2:een siirtymistä:
+    - QuestDB:ssä kuukausien raakadata (events, odds, decisions)
+    - CSV-export parametri-sweepien tuloksista
+    - Valitut Brain-parametrit per liiga
+    - Valittu aloitusliiga Tier 2:lle (paras ROI + volyymi)
+    - Go/no-go päätös: onko edge oikeasti olemassa?
+
+
+# ------------------------------------------------------------
+# TIER 2 — MICRO LIVE (PIENI KASSA)
+# ------------------------------------------------------------
+# Ensimmäinen oikea raha. Minimistake, yksi liiga.
+# ------------------------------------------------------------
+tier_2_micro_live:
+  name: "Micro Live — First Real Money"
+  purpose: "Oikean rahan validointi pienellä kassalla"
+
+  infra:
+    machine: "VPS 2 vCPU, 4 GB RAM, SSD (Hetzner/OVH ~10 EUR/kk)"
+    docker: true
+    external_network: true
+    uptime_target: "99%"
+
+  services:
+    questdb:
+      storage: "10 GB SSD, ~1 GB/kk dataa"
+      backup: "Päivittäinen QuestDB snapshot"
+    brain:
+      workers: 1
+    spine:
+      providers: [sportmonks, odds_api]
+      leagues: ["Premier League"]      # Yksi liiga aluksi
+    execution:
+      mode: betfair
+      adapter: betfair_adapter
+    monitor:
+      alerts: false                    # Manuaalinen seuranta
+
+  credentials:
+    sportmonks_token: required
+    odds_api_key: required
+    betfair:
+      app_key: required
+      cert_path: required              # Betfair SSL sertifikaatti
+      key_path: required
+      username: required
+      password: required
+
+  risk:
+    mode: live
+    wallet: 200.0                      # EUR, Betfair-tili
+    stake: 2.0                         # Min stake ~2 EUR
+    max_bets_per_match: 1
+    max_daily_loss: 20.0               # Stop-loss: 10% kassasta
+    max_open_bets: 3
+
+  brain_config:
+    L_MAX: 3.0
+    EV_MIN: 0.05
+    XG_10M_MIN: 0.2
+    MAX_BETS_PER_MATCH: 1
+    REJECT_RATE: 0.0                   # Oikea eksekuutio
+    MAX_SLIPPAGE: 0.05
+
+  finance:
+    monthly_cost_eur: 10-30
+    breakdown:
+      vps: 10
+      sportmonks: "0 (free tier)"
+      odds_api: "0-10 (paid jos tarvitsee enemmän)"
+      betfair_commission: "5-7% nettovoitosta"
+    exchange_deposit: 200
+    total_initial_investment: 230
+
+  success_criteria: |
+    - 1 kk live-jakso
+    - ROI% > -5% (ei tuhoa kassaa)
+    - Fill rate > 70% (Betfair-orderit)
+    - Ei execution-bugeja
+    - Max drawdown < 25%
+
+
+# ------------------------------------------------------------
+# TIER 3 — SMALL LIVE (KASVATETTU KASSA)
+# ------------------------------------------------------------
+# Validoitu edge, kasvatetaan kassaa ja liigamäärää.
+# ------------------------------------------------------------
+tier_3_small_live:
+  name: "Small Live — Proven Edge"
+  purpose: "Skaalaus useampaan liigaan validoidulla strategialla"
+
+  infra:
+    machine: "VPS 4 vCPU, 8 GB RAM, NVMe (Hetzner ~20 EUR/kk)"
+    docker: true
+    external_network: true
+    uptime_target: "99.5%"
+
+  services:
+    questdb:
+      storage: "50 GB NVMe"
+      backup: "Päivittäinen + viikottainen off-site"
+      retention: "90 päivää hot, arkistointi sen jälkeen"
+    brain:
+      workers: 2
+      config_source: "BRAIN_CONFIG_JSON env"
+    spine:
+      providers: [sportmonks, odds_api]
+      leagues:
+        - "Premier League"
+        - "La Liga"
+        - "Serie A"
+        - "Bundesliga"
+    execution:
+      mode: betfair
+      concurrent_matches: 10-15
+    monitor:
+      alerts: true                     # Telegram/Discord webhook virheistä
+
+  credentials:
+    sportmonks_token: required         # Paid plan tarvitaan (4+ liigaa)
+    odds_api_key: required             # Paid plan
+    betfair:
+      app_key: required
+      cert_path: required
+      key_path: required
+      username: required
+      password: required
+
+  risk:
+    mode: live
+    wallet: 1000.0
+    stake: 5.0-10.0                    # 0.5-1% kassasta
+    max_bets_per_match: 1
+    max_daily_loss: 50.0               # 5% kassasta
+    max_open_bets: 8
+    kelly_fraction: 0.25               # Quarter-Kelly (tulevaisuus)
+
+  brain_config:
+    L_MAX: 2.5                         # Tiukempi latenssi
+    EV_MIN: 0.04                       # Voi laskea hieman edgen kasvaessa
+    XG_10M_MIN: 0.2
+    MAX_BETS_PER_MATCH: 1
+    MAX_SLIPPAGE: 0.05
+
+  finance:
+    monthly_cost_eur: 50-100
+    breakdown:
+      vps: 20
+      sportmonks: "20-40 (paid plan)"
+      odds_api: "10-30 (paid plan)"
+      betfair_commission: "5-7% nettovoitosta"
+    exchange_deposit: 1000
+    total_initial_investment: 1100
+
+  success_criteria: |
+    - 3 kk profitable track record
+    - ROI% > 2% per kuukausi
+    - Sharpe ratio > 1.0
+    - Max drawdown < 15%
+    - Uptime > 99%
+
+
+# ------------------------------------------------------------
+# TIER 4 — PRODUCTION (FULL SCALE)
+# ------------------------------------------------------------
+# Kaikki liigat, automatisoitu, monitoroitu 24/7.
+# ------------------------------------------------------------
+tier_4_production:
+  name: "Production — Full Scale"
+  purpose: "Täysin automatisoitu operaatio kaikilla tuetuilla liigoilla"
+
+  infra:
+    machine: "Dedicated server tai cloud (4+ vCPU, 16 GB RAM, NVMe)"
+    alternative: "2x VPS redundanssilla (active-passive)"
+    docker: true
+    external_network: true
+    uptime_target: "99.9%"
+    location: "EU (lähellä Betfair-serveriä, London)"
+
+  services:
+    questdb:
+      storage: "200 GB NVMe"
+      backup: "Jatkuva replikointi + päivittäinen cold backup"
+      retention: "1 vuosi hot data"
+    brain:
+      workers: 4
+      replicas: 2                      # Active-active
+    spine:
+      instances: 2                     # Yksi per provider
+      providers: [sportmonks, odds_api]
+      leagues:
+        - "Premier League"
+        - "La Liga"
+        - "Serie A"
+        - "Bundesliga"
+        - "Ligue 1"
+        - "Veikkausliiga"
+        - "Allsvenskan"
+        - "Eliteserien"
+    execution:
+      mode: betfair
+      concurrent_matches: 30-50
+      failover: true
+    monitor:
+      alerts: true
+      channels: [telegram, email]
+      healthcheck_interval_s: 30
+
+  credentials:
+    sportmonks_token: "required (Enterprise plan)"
+    odds_api_key: "required (Pro plan)"
+    betfair:
+      app_key: required
+      cert_path: required
+      key_path: required
+      username: required
+      password: required
+
+  risk:
+    mode: live
+    wallet: 5000.0-10000.0
+    stake: 10.0-50.0                   # 0.5-1% kassasta
+    max_bets_per_match: 2
+    max_daily_loss: 250.0              # 5% kassasta
+    max_open_bets: 20
+    kelly_fraction: 0.25
+    circuit_breaker:
+      consecutive_losses: 5            # Pysäytä 1h
+      daily_loss_pct: 8                # Pysäytä loppupäiväksi
+
+  brain_config:
+    L_MAX: 2.0
+    EV_MIN: 0.03
+    XG_10M_MIN: 0.15
+    MAX_BETS_PER_MATCH: 2
+    MAX_SLIPPAGE: 0.03
+
+  finance:
+    monthly_cost_eur: 150-300
+    breakdown:
+      server: "50-100 (dedicated)"
+      sportmonks: "50-80 (enterprise)"
+      odds_api: "30-50 (pro)"
+      monitoring: "0-20 (self-hosted)"
+      betfair_commission: "5-7% nettovoitosta"
+    exchange_deposit: 5000-10000
+    total_initial_investment: 5500-10500
+    expected_monthly_turnover: "2000-10000 EUR"
+
+  success_criteria: |
+    - Positiivinen ROI 6 kk liukuvalla ikkunalla
+    - Sharpe ratio > 1.5
+    - Max drawdown < 10%
+    - Uptime > 99.9%
+    - Fill rate > 80%
+    - Automated recovery toimii
+
+
+# ============================================================
+# TIER-SIIRTYMÄMATRIISI
+# ============================================================
+# Milloin siirtyä seuraavaan tieriin.
+# ============================================================
+tier_transitions:
+  "0 → 1":
+    trigger: "E2E-putki toimii, kaikki komponentit validoitu"
+    action: "Hanki SportMonks + Odds API free tier -avaimet"
+    blocker: "Ei mikään"
+
+  "1 → 1B":
+    trigger: "Putki toimii oikealla datalla, 2 vko ilman bugeja"
+    action: "Päivitä API-planit (paid), lisää kaikki 8 liigaa, hanki VPS"
+    blocker: "Ei mikään — tämä on 0 EUR oikean rahan riskiä"
+
+  "1B → 2":
+    trigger: >
+      GO/NO-GO: vähintään 200 paper-vetoa, ROI > 3%,
+      Sharpe > 1.0, CLV > 0 ainakin yhdessä liigassa
+    action: "Avaa Betfair-tili, hanki SSL-sertifikaatti, talleta 200 EUR"
+    blocker: "Betfair-sertifikaatin hyväksyntä (1-5 pv)"
+    abort_if: "Ei yksikään parametrikombinaatio anna positiivista ROI:ta 200+ vedon näytteellä"
+
+  "2 → 3":
+    trigger: "1 kk live, ROI > -5%, fill rate > 70%"
+    action: "Lisää liigat, päivitä API-planit, kasvata kassa"
+    blocker: "Riittävä data validoi edgen tilastollisesti"
+
+  "3 → 4":
+    trigger: "3 kk profitable, Sharpe > 1.0, max DD < 15%"
+    action: "Siirry dedicated serverille, lisää redundanssi ja alertit"
+    blocker: "Pääoma, tilastollinen varmuus"
+
+
+# ============================================================
+# KUSTANNUSYHTEENVETO (EUR)
+# ============================================================
+cost_summary:
+  tier_0:  { monthly: 0,         deposit: 0,       total_start: 0 }
+  tier_1:  { monthly: "0-20",    deposit: 0,       total_start: 0 }
+  tier_1b: { monthly: "30-60",   deposit: 0,       total_start: 0 }
+  tier_2:  { monthly: "10-30",   deposit: 200,     total_start: 230 }
+  tier_3:  { monthly: "50-100",  deposit: 1000,    total_start: 1100 }
+  tier_4:  { monthly: "150-300", deposit: "5k-10k", total_start: "5.5k-10.5k" }
+
+
+# ============================================================
+# PROVIDER-VERTAILUTAULUKKO
+# ============================================================
+# Mitä kukin provider tarjoaa, hinnat, rajoitukset.
+# ============================================================
+providers:
+
+  sportmonks:
+    type: "Events (match events, lineups, live scores)"
+    website: "sportmonks.com"
+    plans:
+      free:
+        price_eur_month: 0
+        rate_limit: "500 req/h"
+        leagues: "1-2 liigaa"
+        live_events: true
+        historical: false
+        tier_fit: [tier_1]
+      starter:
+        price_eur_month: 20
+        rate_limit: "3000 req/h"
+        leagues: "Kaikki top 5"
+        live_events: true
+        historical: "1 kausi"
+        tier_fit: [tier_1b, tier_2, tier_3]
+      pro:
+        price_eur_month: 50
+        rate_limit: "10000 req/h"
+        leagues: "Kaikki tuetut (100+)"
+        live_events: true
+        historical: "5+ kautta"
+        tier_fit: [tier_4]
+    data_provided:
+      - "match_id, kickoff, home, away, league"
+      - "GOAL, SHOT, CORNER, CARD, SUBSTITUTION, VAR"
+      - "xG per shot (premium)"
+      - "Live minute-by-minute"
+    latency: "1-5s from real event"
+    notes: "xG vaatii premium-planin; free tier riittää MVP:hen"
+
+  odds_api:
+    type: "Odds (pre-match + in-play odds)"
+    website: "the-odds-api.com"
+    plans:
+      free:
+        price_eur_month: 0
+        requests_per_month: 500
+        sports: "Kaikki"
+        markets: "h2h, spreads, totals"
+        bookmakers: 15
+        tier_fit: [tier_1]
+      standard:
+        price_eur_month: 15
+        requests_per_month: 10000
+        sports: "Kaikki"
+        markets: "h2h, spreads, totals, outrights"
+        bookmakers: 15
+        tier_fit: [tier_1b, tier_2]
+      pro:
+        price_eur_month: 40
+        requests_per_month: 100000
+        sports: "Kaikki"
+        markets: "Kaikki + player props"
+        bookmakers: "30+"
+        tier_fit: [tier_3, tier_4]
+    data_provided:
+      - "match_id, sport, league, commence_time"
+      - "bookmaker, market, selection, price"
+      - "OU lines: 0.5, 1.5, 2.5, 3.5, 4.5"
+      - "OVER/UNDER per line"
+    latency: "5-30s (polling-based)"
+    notes: "In-play odds saatavilla mutta viiveellä; live-feedit vaativat Pro"
+
+  betfair:
+    type: "Execution (exchange betting)"
+    website: "betfair.com"
+    role: "Vetojen asettaminen — EI dataprovider"
+    requirements:
+      account: "Rekisteröityminen + identity verification"
+      api_key: "Application key (ilmainen)"
+      ssl_cert: "Self-signed SSL certificate (betfair developer portal)"
+      approval: "1-5 arkipäivää"
+    costs:
+      commission: "5-7% nettovoitosta per markkina"
+      api_access: "Ilmainen (ei-kaupallinen käyttö)"
+      min_bet: "2 EUR"
+      min_deposit: "10 EUR (suositus: 200+ EUR)"
+    data_from_betfair:
+      - "Market catalogues (ottelut + markkinat)"
+      - "Runner prices (reaaliaikainen)"
+      - "Order status (matched/unmatched)"
+    notes: |
+      Betfair on AINOA execution-kanava tässä järjestelmässä.
+      Dataa ei käytetä analyysiin — SportMonks + Odds API hoitavat sen.
+      Betfairilta luetaan vain markkina-ID:t ja fill-status.
+
+  betfair_as_data_source:
+    type: "Vaihtoehtoinen odds-datalähde (tulevaisuus)"
+    description: >
+      Betfair Exchange -hinnat ovat markkinan tehokkaimmat.
+      Closing line = paras proxy todelliselle todennäköisyydelle.
+    potential_use:
+      - "CLV-laskenta (oma hinta vs. closing price)"
+      - "Implied probability kalibrointi"
+      - "Odds-feedi suoraan exchangelta (ei Odds API:a tarvita)"
+    requires: "Betfair Stream API (WebSocket, ilmainen API-keylla)"
+    tier_fit: [tier_3, tier_4]
+
+
+# ============================================================
+# PROVIDER-TIER-MATRIISI
+# ============================================================
+#
+#                    T0    T1    T1B   T2    T3    T4
+# SportMonks         -    free  paid  paid  paid  pro
+# Odds API           -    free  paid  paid  pro   pro
+# Betfair exec       -     -     -    live  live  live
+# Betfair stream     -     -     -     -    opt   yes
+# Mock server       yes    -     -     -     -     -
+#
+# ============================================================
+provider_tier_matrix:
+  tier_0:  { sportmonks: null,   odds_api: null,   betfair_exec: null, betfair_stream: null, mock: true }
+  tier_1:  { sportmonks: free,   odds_api: free,   betfair_exec: null, betfair_stream: null, mock: null }
+  tier_1b: { sportmonks: paid,   odds_api: paid,   betfair_exec: null, betfair_stream: null, mock: null }
+  tier_2:  { sportmonks: paid,   odds_api: paid,   betfair_exec: live, betfair_stream: null, mock: null }
+  tier_3:  { sportmonks: paid,   odds_api: pro,    betfair_exec: live, betfair_stream: optional, mock: null }
+  tier_4:  { sportmonks: pro,    odds_api: pro,    betfair_exec: live, betfair_stream: yes,  mock: null }
+
+
+# ============================================================
+# DATAMÄÄRÄ-ARVIOT PER TIER (kuukausi)
+# ============================================================
+data_volume_per_month:
+  tier_0:
+    matches: "3-10 (mock)"
+    events: "~500"
+    odds: "~2000"
+    decisions: "~500"
+    storage_mb: "<1"
+  tier_1:
+    matches: "30-40 (1 liiga)"
+    events: "~5k"
+    odds: "~20k"
+    decisions: "~5k"
+    storage_mb: "~50"
+  tier_1b:
+    matches: "200-400 (8 liigaa)"
+    events: "~50k-100k"
+    odds: "~200k-500k"
+    decisions: "~50k-100k"
+    storage_mb: "~500"
+  tier_2:
+    matches: "30-40 (1 liiga)"
+    events: "~5k"
+    odds: "~20k"
+    decisions: "~5k"
+    executions: "~50-200"
+    storage_mb: "~100"
+  tier_3:
+    matches: "120-160 (4 liigaa)"
+    events: "~30k"
+    odds: "~120k"
+    decisions: "~30k"
+    executions: "~200-800"
+    storage_mb: "~300"
+  tier_4:
+    matches: "300-500 (8 liigaa)"
+    events: "~80k"
+    odds: "~400k"
+    decisions: "~80k"
+    executions: "~500-2000"
+    storage_mb: "~1000"
+
+
+# ============================================================
+# LIIGA-AIKATAULU (UTC)
+# ============================================================
+# Milloin otteluja pelataan — vaikuttaa VPS:n aktiivisuuteen
+# ============================================================
+league_schedules:
+  Premier_League:  { season: "Aug-May", matchdays: "Sat-Sun + midweek", kickoffs_utc: "12:30-20:00", matches_per_week: "8-10" }
+  La_Liga:         { season: "Aug-May", matchdays: "Fri-Mon", kickoffs_utc: "18:00-20:00", matches_per_week: "10" }
+  Serie_A:         { season: "Aug-May", matchdays: "Sat-Mon", kickoffs_utc: "11:30-19:45", matches_per_week: "10" }
+  Bundesliga:      { season: "Aug-May", matchdays: "Fri-Sun", kickoffs_utc: "13:30-17:30", matches_per_week: "9" }
+  Ligue_1:         { season: "Aug-May", matchdays: "Fri-Sun", kickoffs_utc: "18:00-19:45", matches_per_week: "10" }
+  Veikkausliiga:   { season: "Apr-Oct", matchdays: "Mon,Thu,Sat", kickoffs_utc: "15:00-17:00", matches_per_week: "6" }
+  Allsvenskan:     { season: "Apr-Nov", matchdays: "Sat-Mon", kickoffs_utc: "14:00-17:30", matches_per_week: "8" }
+  Eliteserien:     { season: "Apr-Nov", matchdays: "Sun-Mon", kickoffs_utc: "15:00-18:00", matches_per_week: "8" }
+
+
+# ============================================================
+# TIER-POLKU YHTEENVETO
+# ============================================================
+#
+# T0 (0 EUR)        Putki toimii mockilla
+#   ↓
+# T1 (0 EUR)        Oikea data, 1 liiga, 2 viikkoa
+#   ↓
+# T1B (30-60/kk)    KAIKKI liigat, kuukausia dataa,
+#                    parametri-sweep, 200+ paperi vetoa
+#                    → GO / NO-GO päätös
+#   ↓
+# T2 (230 EUR)      Oikea raha, 1 liiga, 2 EUR/veto
+#   ↓
+# T3 (1100 EUR)     4 liigaa, 5-10 EUR/veto
+#   ↓
+# T4 (5.5k+ EUR)    Full scale, automatisoitu
+#
+# ============================================================

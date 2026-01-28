@@ -91,14 +91,16 @@ Live-vedonlyönnin päätösmoottori. Paper trading MVP + Phase 1 tuotantoinfra.
 │   ├── test_execution.py     # Fill/reject/slippage
 │   └── test_integration.py   # MockProvider + Engine roundtrip
 │
-├── articles/            # Suunnitteludokumentit (spec-versiot)
-├── articles5/           # Tiivistetyt spec-versiot
+├── docs/                # Docs + arkistoidut specs
+│   ├── articles/        # Siirretyt spec-luonnokset
+│   └── archive/         # Vanha futurespec ym.
 ├── legacy/              # Arkistoitu vanha koodi
-├── docs/                # BROKER_INFO.md
 │
 ├── mvp.md               # Pääspesifikaatio (~97KB)
 ├── after_mvp.md         # Mitä rakennettiin MVP:n jälkeen
 ├── futurespec.md        # Phase 2+ roadmap
+├── currentfuturespec.md # Current spec (aligned to all.md)
+├── delta_vision.md      # Gap analysis (futurespec vs all.md)
 ├── todo_wednesday.md    # Aktiivinen tehtävälista
 └── .gitignore
 ```

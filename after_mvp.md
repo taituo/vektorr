@@ -5,7 +5,7 @@ This document captures what was done after the MVP and what should happen next.
 ## What was done (summary)
 - Wrote a project conclusion report in `codex_conclude.md`.
 - Appended reverse-engineering addendum to `retrospec.md`.
-- Appended post-MVP roadmap addendum to `articles/futurespec.md`.
+- Appended post-MVP roadmap addendum to `docs/archive/articles_futurespec.md`.
 - Appended a clarification addendum to `mvpgap.md` (no further edits requested after that).
 - Created a new clean “Phase 1” structure with QuestDB + Rust ingestor + extracted Python brain.
 
