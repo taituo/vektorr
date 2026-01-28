@@ -1,0 +1,13 @@
+# MVP Thresholds
+L_MAX: 3.0              # Max latency P95 in seconds
+EV_MIN: 0.05            # 5% minimum expected value
+XG_10M_MIN: 0.2         # Min xG in last 10 min
+MAX_BETS_PER_MATCH: 1   # Max bets per match
+
+# Execution
+REJECT_RATE: 0.20       # 20% simulated rejection rate
+MAX_SLIPPAGE: 0.10      # Max price slippage on fill
+
+# Paper Trading
+WALLET_START: 1000.0    # Starting virtual balance
+STAKE: 10.0             # Flat stake per bet

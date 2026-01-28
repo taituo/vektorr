@@ -1,0 +1,28 @@
+services:
+  questdb:
+    image: questdb/questdb:latest
+    ports:
+      - "9000:9000"
+      - "9009:9009"
+    environment:
+      - QDB_HTTP_ENABLED=true
+      - QDB_PG_ENABLED=true
+      - QDB_ILP_ENABLED=true
+    volumes:
+      - questdb-data:/var/lib/questdb
+  questdb-init:
+    image: python:3.11-slim
+    depends_on:
+      - questdb
+    environment:
+      - QDB_HOST=questdb
+      - QDB_PORT=9000
+      - QDB_SCHEMA=/app/schema.sql
+      - QDB_WAIT_TIMEOUT=120
+    volumes:
+      - ./schema.sql:/app/schema.sql:ro
+      - ./init.py:/app/init.py:ro
+    command: ["python", "/app/init.py"]
+
+volumes:
+  questdb-data:

@@ -1,0 +1,48 @@
+# ENTITY MAPPINGS
+# Tänne listataan variaatiot joukkueiden nimistä.
+# Vasen puoli = Standardinimi (käytetään sisäisesti ja Betfair-haussa)
+# Oikea puoli = Lista tunnetuista variaatioista (Sportmonks, uutiset, Twitter jne.)
+
+TEAMS:
+  # VEIKKAUSLIIGA
+  HJK Helsinki:
+    - HJK
+    - HJK Helsinki
+    - Helsingin Jalkapalloklubi
+  KuPS:
+    - KuPS
+    - Kuopion Palloseura
+  SJK:
+    - SJK
+    - SJK Seinajoki
+    - Seinäjoen Jalkapallokerho
+  Ilves:
+    - Ilves
+    - Tampereen Ilves
+  
+  # ALLSVENSKAN
+  AIK:
+    - AIK
+    - AIK Stockholm
+    - AIK Fotboll
+  Malmo FF:
+    - Malmö FF
+    - Malmo FF
+    - Malmo
+  Hammarby:
+    - Hammarby
+    - Hammarby IF
+  
+  # ELITESERIEN
+  Bodo/Glimt:
+    - Bodo/Glimt
+    - Bodø/Glimt
+    - FK Bodo/Glimt
+
+LEAGUES:
+  Veikkausliiga:
+    - Finland Veikkausliiga
+    - Finnish Veikkausliiga
+  Allsvenskan:
+    - Sweden Allsvenskan
+    - Swedish Allsvenskan

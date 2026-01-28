@@ -1,0 +1,21 @@
+mode: dry_run
+
+questdb:
+  host: localhost
+  port: 9000
+  log_to_questdb: true
+
+poll:
+  interval_seconds: 2
+
+risk:
+  max_bets_per_match: 1
+  min_edge: 0.05
+  stake: 10.0
+
+betfair:
+  app_key: ""
+  cert_path: ""
+  key_path: ""
+  username: ""
+  password: ""
