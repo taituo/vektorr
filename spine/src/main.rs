@@ -410,6 +410,17 @@ async fn run_providers(args: Args) -> Result<()> {
     let mut handles = Vec::new();
     let resolver = Arc::new(Mutex::new(MatchResolver::new()));
 
+    // Cold-start: load existing match_map entries from QuestDB
+    {
+        let mut r = resolver.lock().await;
+        // QuestDB HTTP API is on port 9000 by default (ILP is on qdb_port which is 9009)
+        let http_port = if args.qdb_port == 9009 { 9000 } else { args.qdb_port };
+        match r.load_from_questdb(&args.qdb_host, http_port).await {
+            Ok(_) => {}
+            Err(e) => eprintln!("cold-start warning: {}", e),
+        }
+    }
+
     if let Some(token) = args.sportmonks_token.clone() {
         let leagues = args
             .sportmonks_leagues

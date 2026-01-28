@@ -1,5 +1,6 @@
 use anyhow::{Context, Result};
 use chrono::{DateTime, Utc};
+use serde::Deserialize;
 use serde_yaml::Value;
 use std::collections::HashMap;
 use std::path::Path;
@@ -27,6 +28,48 @@ impl MatchResolver {
             by_canonical: HashMap::new(),
             team_mapper: load_team_mapper(),
         }
+    }
+
+    /// Load existing match_map entries from QuestDB HTTP API on startup.
+    /// Populates by_provider and by_canonical so we don't create duplicates after restart.
+    pub async fn load_from_questdb(&mut self, qdb_http_host: &str, qdb_http_port: u16) -> Result<usize> {
+        let url = format!(
+            "http://{}:{}/exec?query={}&limit=0,100000",
+            qdb_http_host,
+            qdb_http_port,
+            urlencoded("SELECT provider, provider_match_id, match_id, home, away FROM match_map"),
+        );
+        let resp = reqwest::get(&url)
+            .await
+            .context("questdb match_map query")?;
+        if !resp.status().is_success() {
+            let status = resp.status();
+            let body = resp.text().await.unwrap_or_default();
+            anyhow::bail!("questdb match_map query failed ({}): {}", status, body);
+        }
+        let result: QdbQueryResult = resp.json().await.context("parse questdb response")?;
+        let rows = result.dataset.unwrap_or_default();
+        let mut count = 0usize;
+        for row in &rows {
+            if row.len() < 5 {
+                continue;
+            }
+            let provider = match row[0].as_str() { Some(s) => s, None => continue };
+            let provider_match_id = match row[1].as_str() { Some(s) => s, None => continue };
+            let match_id = match row[2].as_str() { Some(s) => s, None => continue };
+            let _home = row[3].as_str().unwrap_or("");
+            let _away = row[4].as_str().unwrap_or("");
+
+            let key = provider_key(provider, provider_match_id);
+            self.by_provider.insert(key, match_id.to_string());
+
+            // match_id is the canonical form, insert directly
+            self.by_canonical.entry(match_id.to_string()).or_insert(match_id.to_string());
+
+            count += 1;
+        }
+        eprintln!("cold-start: loaded {} match_map entries from QuestDB", count);
+        Ok(count)
     }
 
     pub fn resolve(
@@ -132,6 +175,17 @@ fn insert_team(map: &mut HashMap<String, String>, variant: &str, canonical: &str
         return;
     }
     map.insert(key, canonical.to_string());
+}
+
+#[derive(Debug, Deserialize)]
+struct QdbQueryResult {
+    dataset: Option<Vec<Vec<serde_json::Value>>>,
+}
+
+fn urlencoded(s: &str) -> String {
+    s.replace(' ', "%20")
+        .replace(',', "%2C")
+        .replace('*', "%2A")
 }
 
 fn load_team_mapper() -> Option<TeamMapper> {
