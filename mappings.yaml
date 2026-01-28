@@ -192,6 +192,209 @@ TEAMS:
     - Villarreal
     - Villarreal CF
 
+  # BUNDESLIGA
+  Bayern Munich:
+    - Bayern Munich
+    - FC Bayern Munich
+    - FC Bayern München
+    - Bayern München
+    - Bayern
+  Borussia Dortmund:
+    - Borussia Dortmund
+    - BVB
+    - Dortmund
+  RB Leipzig:
+    - RB Leipzig
+    - RasenBallsport Leipzig
+    - Leipzig
+  Bayer Leverkusen:
+    - Bayer Leverkusen
+    - Bayer 04 Leverkusen
+    - Leverkusen
+  Eintracht Frankfurt:
+    - Eintracht Frankfurt
+    - Frankfurt
+    - SGE
+  VfB Stuttgart:
+    - VfB Stuttgart
+    - Stuttgart
+  VfL Wolfsburg:
+    - VfL Wolfsburg
+    - Wolfsburg
+  Borussia Monchengladbach:
+    - Borussia Mönchengladbach
+    - Borussia Monchengladbach
+    - Gladbach
+    - BMG
+  SC Freiburg:
+    - SC Freiburg
+    - Freiburg
+  TSG Hoffenheim:
+    - TSG Hoffenheim
+    - TSG 1899 Hoffenheim
+    - Hoffenheim
+  1. FC Union Berlin:
+    - 1. FC Union Berlin
+    - Union Berlin
+  FC Augsburg:
+    - FC Augsburg
+    - Augsburg
+  Werder Bremen:
+    - Werder Bremen
+    - SV Werder Bremen
+    - Bremen
+  1. FC Heidenheim:
+    - 1. FC Heidenheim
+    - Heidenheim
+  SV Darmstadt 98:
+    - SV Darmstadt 98
+    - Darmstadt
+  1. FC Koln:
+    - 1. FC Köln
+    - 1. FC Koln
+    - FC Koln
+    - Koln
+  FSV Mainz 05:
+    - 1. FSV Mainz 05
+    - Mainz 05
+    - Mainz
+  VfL Bochum:
+    - VfL Bochum
+    - Bochum
+
+  # SERIE A
+  AC Milan:
+    - AC Milan
+    - Milan
+  Inter Milan:
+    - Inter Milan
+    - FC Internazionale Milano
+    - FC Internazionale
+    - Inter
+  Juventus:
+    - Juventus
+    - Juventus FC
+    - Juve
+  Napoli:
+    - SSC Napoli
+    - Napoli
+  AS Roma:
+    - AS Roma
+    - Roma
+  Lazio:
+    - SS Lazio
+    - Lazio
+  Atalanta:
+    - Atalanta BC
+    - Atalanta
+  Fiorentina:
+    - ACF Fiorentina
+    - Fiorentina
+  Bologna:
+    - Bologna FC 1909
+    - Bologna FC
+    - Bologna
+  Torino:
+    - Torino FC
+    - Torino
+  Monza:
+    - AC Monza
+    - Monza
+  Udinese:
+    - Udinese Calcio
+    - Udinese
+  Cagliari:
+    - Cagliari Calcio
+    - Cagliari
+  Empoli:
+    - Empoli FC
+    - Empoli
+  Frosinone:
+    - Frosinone Calcio
+    - Frosinone
+  Genoa:
+    - Genoa CFC
+    - Genoa
+  Hellas Verona:
+    - Hellas Verona FC
+    - Hellas Verona
+    - Verona
+  Lecce:
+    - US Lecce
+    - Lecce
+  Salernitana:
+    - US Salernitana 1919
+    - Salernitana
+  Sassuolo:
+    - US Sassuolo
+    - Sassuolo
+
+  # LIGUE 1
+  Paris Saint-Germain:
+    - Paris Saint-Germain
+    - Paris Saint Germain
+    - Paris SG
+    - PSG
+  Marseille:
+    - Olympique de Marseille
+    - Olympique Marseille
+    - Marseille
+    - OM
+  Lyon:
+    - Olympique Lyonnais
+    - Olympique Lyon
+    - Lyon
+    - OL
+  Monaco:
+    - AS Monaco
+    - Monaco
+  Lille:
+    - Lille OSC
+    - LOSC Lille
+    - Lille
+  Nice:
+    - OGC Nice
+    - Nice
+  Lens:
+    - RC Lens
+    - Lens
+  Rennes:
+    - Stade Rennais FC
+    - Stade Rennais
+    - Rennes
+  Strasbourg:
+    - RC Strasbourg Alsace
+    - RC Strasbourg
+    - Strasbourg
+  Toulouse:
+    - Toulouse FC
+    - Toulouse
+  Brest:
+    - Stade Brestois 29
+    - Brest
+  Montpellier:
+    - Montpellier HSC
+    - Montpellier
+  Reims:
+    - Stade de Reims
+    - Reims
+  Nantes:
+    - FC Nantes
+    - Nantes
+  Le Havre:
+    - Le Havre AC
+    - Le Havre
+  Lorient:
+    - FC Lorient
+    - Lorient
+  Clermont Foot:
+    - Clermont Foot 63
+    - Clermont Foot
+    - Clermont
+  Metz:
+    - FC Metz
+    - Metz
+
 LEAGUES:
   Veikkausliiga:
     - Finland Veikkausliiga
@@ -199,3 +402,25 @@ LEAGUES:
   Allsvenskan:
     - Sweden Allsvenskan
     - Swedish Allsvenskan
+  Eliteserien:
+    - Norway Eliteserien
+    - Norwegian Eliteserien
+  Premier League:
+    - English Premier League
+    - EPL
+    - England Premier League
+  La Liga:
+    - Spanish La Liga
+    - Spain La Liga
+    - Primera Division
+  Serie A:
+    - Italian Serie A
+    - Italy Serie A
+    - Serie A TIM
+  Bundesliga:
+    - German Bundesliga
+    - Germany Bundesliga
+  Ligue 1:
+    - French Ligue 1
+    - France Ligue 1
+    - Ligue 1 Uber Eats
