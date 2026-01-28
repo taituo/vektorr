@@ -179,7 +179,7 @@ def main():
                 continue
             if not risk_limits_ok(d, config):
                 continue
-    if mode == "betfair" and adapter:
+            if mode == "betfair" and adapter:
                 market_id = resolve_market_mapping(
                     qdb.get("host", "localhost"),
                     qdb.get("port", 9000),
