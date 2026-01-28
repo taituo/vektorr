@@ -1,5 +1,5 @@
 # ============================================================
-# BOTBET ENVIRONMENT SPECIFICATION
+# VEKTORR ENVIRONMENT SPECIFICATION
 # ============================================================
 # Tier-pohjainen ympäristökuvaus pienimmästä suurimpaan.
 # Jokainen tier sisältää: infra, konffi, riski, rahoitus.

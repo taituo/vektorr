@@ -1,8 +1,8 @@
-# Retrospective & Reverse Engineering: BotBet MVP
+# Retrospective & Reverse Engineering: Vektorr MVP
 
 ## 1. System Analysis (Reverse Engineering)
 
-The current `BotBet` MVP is a synchronous, monolithic Python application designed to simulate a sports betting loop. It operates on a single thread, orchestrating data ingestion, decision logic, and paper trading execution.
+The current `Vektorr` MVP is a synchronous, monolithic Python application designed to simulate a sports betting loop. It operates on a single thread, orchestrating data ingestion, decision logic, and paper trading execution.
 
 ### Logic Flow (`main.py`)
 1.  **Initialization**: Loads `config.yaml` and initializes `BettingEngine`, `ExecutionStub`, `PaperWallet`, and `MockProvider`.

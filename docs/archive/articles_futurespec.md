@@ -1,7 +1,7 @@
-# FutureSpec: BotBet v0.2+ (The 8gents Era)
+# FutureSpec: Vektorr v0.2+ (The 8gents Era)
 
 ## 1. Executive Summary
-Moving from the monolithic MVP, **BotBet v0.2** implements the "8gents" philosophy: a distributed, agent-native operating system. The system splits concerns between a high-performance, safe core (Rust) and flexible, intelligent agents (Python).
+Moving from the monolithic MVP, **Vektorr v0.2** implements the "8gents" philosophy: a distributed, agent-native operating system. The system splits concerns between a high-performance, safe core (Rust) and flexible, intelligent agents (Python).
 
 ## 2. Architectural Pillars
 

@@ -1,4 +1,4 @@
-# BotBet MVP - Laadun Arviointi
+# Vektorr MVP - Laadun Arviointi
 
 **Arvioija**: Claude Haiku 4.5
 **Päivämäärä**: 2026-01-28
@@ -8,7 +8,7 @@
 
 ## Koodi Katsaus - Laadun Arviointi MVP-standardien Mukaan
 
-Olen analysoinut **BotBet MVP** -projektia perusteellisesti. Tässä on rakenteikas laadun arviointi:
+Olen analysoinut **Vektorr MVP** -projektia perusteellisesti. Tässä on rakenteikas laadun arviointi:
 
 ---
 
@@ -97,7 +97,7 @@ Olen analysoinut **BotBet MVP** -projektia perusteellisesti. Tässä on rakentei
 
 ## 📊 JOHTOPÄÄTÖKSET
 
-**BotBet MVP** on hyvin rakennettu järjestelmä, joka:
+**Vektorr MVP** on hyvin rakennettu järjestelmä, joka:
 
 - ✅ Täyttää MVP-vaatimukset selkeästi
 - ✅ Noudattaa clean code -periaatteita
@@ -112,7 +112,7 @@ Olen analysoinut **BotBet MVP** -projektia perusteellisesti. Tässä on rakentei
 
 **Lopulliset huomiot**:
 
-BotBet MVP on **erittäin hyvä esimerkki MVP-filosofiasta**: se tekee yhden asian hyvin (päätösten tekeminen pelkän viiden portin logiikan perusteella), on selkeä ja testattava, eikä sisällä turhaa monimutkaisuutta. Projekti voisi mennä tuotantoon nykyisellään, mutta pienillä parannuksilla se olisi entistäkin vahvempi.
+Vektorr MVP on **erittäin hyvä esimerkki MVP-filosofiasta**: se tekee yhden asian hyvin (päätösten tekeminen pelkän viiden portin logiikan perusteella), on selkeä ja testattava, eikä sisällä turhaa monimutkaisuutta. Projekti voisi mennä tuotantoon nykyisellään, mutta pienillä parannuksilla se olisi entistäkin vahvempi.
 
 Arviota kunnioittaa:
 - Moduulien selkeä rakenne

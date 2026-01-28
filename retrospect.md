@@ -1,7 +1,7 @@
-# BotBet System Specification & Retrospective
+# Vektorr System Specification & Retrospective
 
 ## 1. System Overview
-**Project Name:** BotBet  
+**Project Name:** Vektorr  
 **Type:** Automated High-Frequency Trading System for Sports Betting (Live Football)  
 **Goal:** To autonomously identify value in live betting markets by correlating real-time match events (xG, pressure) with bookmaker odds, executing trades when positive Expected Value (EV) is detected.
 

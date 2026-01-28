@@ -1,8 +1,8 @@
-# BotBet – Agent & Codebase Guide
+# Vektorr – Real-time Betting Decision Engine
 
-Live-vedonlyönnin päätösmoottori. Paper trading MVP + Phase 1 tuotantoinfra.
+High-performance live betting execution system. Paper trading MVP + Phase 1 production infra.
 
-## Arkkitehtuuri
+## Architecture
 
 ```
 ┌─────────────────────────────────────────────────────────┐
@@ -11,22 +11,22 @@ Live-vedonlyönnin päätösmoottori. Paper trading MVP + Phase 1 tuotantoinfra.
 └───────────────┬─────────────────────────────────────────┘
                 │
         ┌───────▼───────┐
-        │  SPINE (Rust)  │  Ingestor: normalisoi, deduplikoi, kirjoittaa
-        │  spine/src/    │  QuestDB:hen ILP:llä + kutsuu Brain HTTP API:a
+        │  SPINE (Rust)  │  Ingestor: normalizes, deduplicates, writes
+        │  spine/src/    │  to QuestDB via ILP + calls Brain HTTP API
         └───────┬───────┘
                 │
        ┌────────▼────────┐
-       │  BRAIN (Python)  │  Päätöslogiikka: TPS + 5 hard gatea
-       │  brain/          │  FastAPI-palvelu (port 8090)
+       │  BRAIN (Python)  │  Decision Logic: TPS + 5 hard gates
+       │  brain/          │  FastAPI service (port 8090)
        └────────┬────────┘
                 │
        ┌────────▼────────┐
-       │  EXECUTION       │  Betfair-adapteri (stub), dry-run, manual log
-       │  execution/      │  Pollaa QuestDB:stä päätöksiä
+       │  EXECUTION       │  Betfair adapter (stub), dry-run, manual log
+       │  execution/      │  Polls QuestDB for decisions
        └────────┬────────┘
                 │
         ┌───────▼───────┐
-        │  QUESTDB        │  Aikasarjatietokanta (Docker)
+        │  QUESTDB        │  Time-series Database (Docker)
         │  infra/questdb/ │  events, odds, decisions, mappings
         └───────────────┘
 ```

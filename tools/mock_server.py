@@ -40,6 +40,8 @@ class MatchSim:
         self.score_home = 0
         self.score_away = 0
         self.finished = False
+        self.half_time = False
+        self.red_card_team: str | None = None
 
         # buffers
         self.events: list[dict] = []
@@ -49,6 +51,11 @@ class MatchSim:
         self._base_price_over = {1.5: 1.35, 2.5: 2.10, 3.5: 3.80}
         self._suspended_until: datetime | None = None
 
+        # injury time
+        self._injury_time_1h = random.randint(1, 4)
+        self._injury_time_2h = random.randint(1, 5)
+        self._end_minute = 90 + self._injury_time_2h
+
     def total_goals(self) -> int:
         return self.score_home + self.score_away
 
@@ -57,16 +64,31 @@ class MatchSim:
         if self.finished:
             return
         self.minute += 1
-        if self.minute > 90:
+
+        # Half-time: pause at 45 + injury time
+        ht_end = 45 + self._injury_time_1h
+        if self.minute == 45:
+            self._add_event(datetime.now(timezone.utc), "STATE_CHANGE", None, 0.0, extra="HALF_TIME")
+        if 45 < self.minute <= ht_end and not self.half_time:
+            # Injury time first half — still emit events sparingly
+            pass
+        if self.minute == ht_end + 1:
+            self.half_time = True
+            # Half-time break: skip 1 tick (simulates break)
+            self._add_event(datetime.now(timezone.utc), "STATE_CHANGE", None, 0.0, extra="SECOND_HALF")
+
+        if self.minute > self._end_minute:
+            self._add_event(datetime.now(timezone.utc), "STATE_CHANGE", None, 0.0, extra="FULL_TIME")
             self.finished = True
             return
 
         now = datetime.now(timezone.utc)
 
-        # Generate events with some probability
-        self._maybe_event(now)
+        # No events during half-time gap
+        if 45 + self._injury_time_1h < self.minute <= 45 + self._injury_time_1h + 1:
+            return
 
-        # Always emit fresh odds
+        self._maybe_event(now)
         self._emit_odds(now)
 
     # ---- event generation ----
@@ -75,17 +97,31 @@ class MatchSim:
         r = random.random()
         team = random.choice([self.home, self.away])
 
-        if r < 0.02:
+        # Higher goal chance during PRESS (after danger attacks)
+        goal_prob = 0.02
+        recent_dangers = sum(
+            1 for e in self.events[-20:]
+            if e["type"] in ("DANGER_ATTACK", "SHOT")
+        )
+        if recent_dangers >= 3:
+            goal_prob = 0.05  # PRESS → higher goal rate
+
+        if r < goal_prob:
             self._add_goal(now, team)
-        elif r < 0.07:
+        elif r < goal_prob + 0.05:
             self._add_event(now, "CORNER", team, 0.0)
-        elif r < 0.14:
+        elif r < goal_prob + 0.12:
             self._add_event(now, "DANGER_ATTACK", team, 0.0)
-        elif r < 0.22:
+        elif r < goal_prob + 0.20:
             xg = round(random.uniform(0.05, 0.35), 3)
             self._add_event(now, "SHOT", team, xg)
-        elif r < 0.24:
-            self._add_event(now, "CARD", team, 0.0)
+        elif r < goal_prob + 0.22:
+            # Card: 20% chance red
+            is_red = random.random() < 0.20
+            card_type = "RED_CARD" if is_red else "CARD"
+            self._add_event(now, card_type, team, 0.0)
+            if is_red:
+                self.red_card_team = team
 
     def _add_goal(self, now: datetime, team: str):
         if team == self.home:
@@ -93,18 +129,20 @@ class MatchSim:
         else:
             self.score_away += 1
         self._add_event(now, "GOAL", team, round(random.uniform(0.10, 0.35), 3))
+        # Post-goal suspension: 30s
         self._suspended_until = now + timedelta(seconds=30)
 
-    def _add_event(self, now: datetime, etype: str, team: str, xg: float):
+    def _add_event(self, now: datetime, etype: str, team: str | None, xg: float, extra: str | None = None):
         latency = random.uniform(0.3, 3.0)
-        self.events.append({
+        ev = {
             "match_id": self.match_id,
             "t_event": now.isoformat(),
             "t_recv": (now + timedelta(seconds=latency)).isoformat(),
             "type": etype,
             "team": team,
             "xg": xg,
-        })
+        }
+        self.events.append(ev)
 
     # ---- odds generation ----
 
@@ -114,12 +152,34 @@ class MatchSim:
             is_susp = random.random() < 0.05
 
         total = self.total_goals()
+        remaining_frac = max(0.0, (90 - self.minute) / 90.0)
+
         for point in (1.5, 2.5, 3.5):
             base = self._base_price_over[point]
-            # Shift price based on goals scored relative to line
-            shift = (total - point) * -0.40
-            price_over = max(1.01, round(base + shift + random.uniform(-0.05, 0.05), 2))
-            price_under = max(1.01, round((1 / (1 - 1 / price_over)) if price_over > 1 else 50.0 + random.uniform(-0.05, 0.05), 2))
+            goals_needed = point - total
+
+            if goals_needed <= 0:
+                # Already over the line
+                price_over = max(1.01, round(1.01 + remaining_frac * 0.15 + random.uniform(-0.02, 0.02), 2))
+            else:
+                # Shift by goals scored and time remaining
+                time_decay = (1 - remaining_frac) * 0.6
+                goal_shift = (total - point) * -0.40
+                price_over = max(1.01, round(base + goal_shift + time_decay + random.uniform(-0.05, 0.05), 2))
+
+            # Under price: implied from over (with margin)
+            margin = 1.05
+            implied_over = 1.0 / price_over
+            implied_under = max(0.02, margin - implied_over)
+            price_under = max(1.01, round(1.0 / implied_under, 2))
+
+            # Post-goal shock: sharper price movement for 10 ticks after goal
+            if self._suspended_until is not None:
+                secs_since_goal = (now - (self._suspended_until - timedelta(seconds=30))).total_seconds()
+                if 0 < secs_since_goal < 20:
+                    shock = random.uniform(0.05, 0.20)
+                    price_over = max(1.01, round(price_over - shock, 2))
+                    price_under = max(1.01, round(price_under + shock * 0.5, 2))
 
             latency = random.uniform(0.3, 2.0)
             t_recv = (now + timedelta(seconds=latency)).isoformat()
@@ -187,6 +247,20 @@ class SimulationEngine:
                         out.append(o)
             return out
 
+    def get_status(self) -> list[dict]:
+        with self.lock:
+            return [
+                {
+                    "match_id": m.match_id,
+                    "home": m.home,
+                    "away": m.away,
+                    "minute": m.minute,
+                    "score": f"{m.score_home}-{m.score_away}",
+                    "finished": m.finished,
+                }
+                for m in self.matches
+            ]
+
 
 engine: SimulationEngine | None = None
 
@@ -206,6 +280,8 @@ class Handler(BaseHTTPRequestHandler):
             data = engine.get_events(since)
         elif parsed.path == "/odds":
             data = engine.get_odds(since)
+        elif parsed.path == "/status":
+            data = engine.get_status()
         else:
             self.send_error(404)
             return
@@ -236,6 +312,8 @@ def main():
     print(f"Mock server on :{args.port}  ({args.matches} matches, {args.speed}s/min)")
     for m in engine.matches:
         print(f"  {m.match_id}: {m.home} vs {m.away}")
+    print(f"  Injury time 1H: {[m._injury_time_1h for m in engine.matches]}")
+    print(f"  Injury time 2H: {[m._injury_time_2h for m in engine.matches]}")
 
     server = HTTPServer(("0.0.0.0", args.port), Handler)
     try:
