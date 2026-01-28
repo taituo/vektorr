@@ -18,6 +18,8 @@ class Odds(BaseModel):
     market: str
     selection: str
     price: float
+    line: Optional[float] = None
+    point: Optional[float] = None
     is_suspended: bool = False
 
 class MatchState(BaseModel):

@@ -15,6 +15,8 @@ CREATE TABLE IF NOT EXISTS odds (
   market SYMBOL,
   selection SYMBOL,
   price DOUBLE,
+  line DOUBLE,
+  point DOUBLE,
   is_suspended LONG,
   latency_ms LONG
 ) TIMESTAMP(timestamp) PARTITION BY DAY;
@@ -39,9 +41,10 @@ CREATE TABLE IF NOT EXISTS match_map (
   provider SYMBOL,
   provider_match_id SYMBOL,
   match_id SYMBOL,
-  kickoff TIMESTAMP,
+  kickoff LONG, -- epoch millis
   home SYMBOL,
-  away SYMBOL
+  away SYMBOL,
+  seen LONG
 ) TIMESTAMP(timestamp) PARTITION BY DAY;
 
 CREATE TABLE IF NOT EXISTS team_map (

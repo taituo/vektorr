@@ -8,11 +8,14 @@ use std::time::Instant;
 use tokio::time::sleep;
 
 use crate::brain::BrainClient;
-use crate::ilp::{decision_to_ilp, event_to_ilp};
+use crate::ilp::{decision_to_ilp, event_to_ilp, match_map_to_ilp};
+use crate::mapping::MatchResolver;
 use crate::match_id::canonical_match_id;
 use crate::polling::{poll_sleep_ms, Deduper, next_backoff};
 use crate::questdb::QuestDbClient;
 use crate::types::Event;
+use std::sync::Arc;
+use tokio::sync::Mutex;
 
 #[derive(Clone)]
 pub struct SportMonksConfig {
@@ -25,6 +28,7 @@ pub struct SportMonksConfig {
     pub dedup_capacity: usize,
     pub max_backoff_ms: u64,
     pub brain: Option<BrainClient>,
+    pub match_resolver: Option<Arc<Mutex<MatchResolver>>>,
 }
 
 #[derive(Debug, Deserialize)]
@@ -110,13 +114,49 @@ pub async fn run_sportmonks(mut qdb: QuestDbClient, cfg: SportMonksConfig) -> Re
         let fixtures = parse_fixtures(body.data)?;
 
         let write_start = Instant::now();
+        let mut batch: Vec<String> = Vec::new();
         for fixture in fixtures.iter() {
+            let league_id = match fixture.league_id {
+                Some(id) => id,
+                None => continue,
+            };
+            if !cfg.leagues.iter().any(|id| id == &league_id.to_string()) {
+                continue;
+            }
             let (home, away) = match home_away_names(fixture) {
                 Some(v) => v,
                 None => continue,
             };
             let kickoff = fixture_start(fixture).unwrap_or_else(Utc::now);
-            let match_id = canonical_match_id(&home, &away, kickoff);
+            let provider_match_id = fixture.id.to_string();
+            let (match_id, map_line) = if let Some(resolver) = &cfg.match_resolver {
+                let mut resolver = resolver.lock().await;
+                let res = resolver.resolve(
+                    "sportmonks",
+                    &provider_match_id,
+                    &home,
+                    &away,
+                    kickoff,
+                );
+                let line = if res.is_new {
+                    Some(match_map_to_ilp(
+                        "sportmonks",
+                        &provider_match_id,
+                        &res.match_id,
+                        &home,
+                        &away,
+                        kickoff,
+                    ))
+                } else {
+                    None
+                };
+                (res.match_id, line)
+            } else {
+                (canonical_match_id(&home, &away, kickoff), None)
+            };
+            if let Some(line) = map_line {
+                batch.push(line);
+            }
             let team_map = team_location_map(fixture);
 
             if let Some(events) = &fixture.events {
@@ -136,13 +176,16 @@ pub async fn run_sportmonks(mut qdb: QuestDbClient, cfg: SportMonksConfig) -> Re
                         team,
                         xg: 0.0,
                     };
-                    qdb.write_line(&event_to_ilp(&event)).await?;
+                    batch.push(event_to_ilp(&event));
                     if let Some(brain) = &cfg.brain {
                         let decision = brain.send_event(&event).await?;
-                        qdb.write_line(&decision_to_ilp(&decision)).await?;
+                        batch.push(decision_to_ilp(&decision));
                     }
                 }
             }
+        }
+        if !batch.is_empty() {
+            qdb.write_lines(&batch).await?;
         }
         let write_ms = write_start.elapsed().as_millis() as u64;
 

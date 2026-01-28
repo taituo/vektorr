@@ -18,4 +18,20 @@ impl QuestDbClient {
         self.stream.write_all(b"\n").await?;
         Ok(())
     }
+
+    pub async fn write_lines(&mut self, lines: &[String]) -> Result<()> {
+        if lines.is_empty() {
+            return Ok(());
+        }
+        let mut buf = String::new();
+        for (idx, line) in lines.iter().enumerate() {
+            if idx > 0 {
+                buf.push('\n');
+            }
+            buf.push_str(line);
+        }
+        buf.push('\n');
+        self.stream.write_all(buf.as_bytes()).await?;
+        Ok(())
+    }
 }

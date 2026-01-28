@@ -18,6 +18,8 @@ class Odds(BaseModel):
     market: str  # e.g., OU_2.5, NEXT_GOAL, DC
     selection: str
     price: float
+    line: Optional[float] = None
+    point: Optional[float] = None
     is_suspended: bool = False
 
 class MatchState(BaseModel):

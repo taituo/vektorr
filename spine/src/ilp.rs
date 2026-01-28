@@ -1,5 +1,6 @@
 use crate::brain::DecisionResponse;
 use crate::types::{Event, Odds};
+use chrono::{DateTime, Utc};
 
 pub fn event_to_ilp(event: &Event) -> String {
     let latency_ms = (event.t_recv - event.t_event).num_milliseconds();
@@ -21,14 +22,46 @@ pub fn odds_to_ilp(odds: &Odds) -> String {
     let latency_ms = (odds.t_recv - odds.t_seen).num_milliseconds();
     let ts = odds.t_recv.timestamp_nanos_opt().unwrap_or(0);
 
+    let mut fields = vec![
+        format!("price={}", odds.price),
+        format!("is_suspended={}i", if odds.is_suspended { 1 } else { 0 }),
+    ];
+    if let Some(line) = odds.line {
+        fields.push(format!("line={}", line));
+    }
+    if let Some(point) = odds.point {
+        fields.push(format!("point={}", point));
+    }
+    fields.push(format!("latency_ms={}", latency_ms));
+
     format!(
-        "odds,match_id={},market={},selection={} price={},is_suspended={}i,latency_ms={} {}",
+        "odds,match_id={},market={},selection={} {} {}",
         escape_tag(&odds.match_id),
         escape_tag(&odds.market),
         escape_tag(&odds.selection),
-        odds.price,
-        if odds.is_suspended { 1 } else { 0 },
-        latency_ms,
+        fields.join(","),
+        ts
+    )
+}
+
+pub fn match_map_to_ilp(
+    provider: &str,
+    provider_match_id: &str,
+    match_id: &str,
+    home: &str,
+    away: &str,
+    kickoff: DateTime<Utc>,
+) -> String {
+    let ts = Utc::now().timestamp_nanos_opt().unwrap_or(0);
+    let kickoff_ms = kickoff.timestamp_millis();
+    format!(
+        "match_map,provider={},provider_match_id={},match_id={},home={},away={} seen=1i,kickoff={}i {}",
+        escape_tag(provider),
+        escape_tag(provider_match_id),
+        escape_tag(match_id),
+        escape_tag(home),
+        escape_tag(away),
+        kickoff_ms,
         ts
     )
 }

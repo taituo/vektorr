@@ -59,19 +59,23 @@ pub async fn poll_events(mut qdb: QuestDbClient, cfg: PollConfig) -> Result<()> 
 
         let mut max_ts = since;
         let write_start = Instant::now();
+        let mut batch: Vec<String> = Vec::new();
         for event in events.iter() {
             if !dedup.allow(event_key(event)) {
                 continue;
             }
-            qdb.write_line(&event_to_ilp(event)).await?;
+            batch.push(event_to_ilp(event));
             if let Some(brain) = &cfg.brain {
                 let decision = brain.send_event(event).await?;
-                qdb.write_line(&decision_to_ilp(&decision)).await?;
+                batch.push(decision_to_ilp(&decision));
             }
             max_ts = Some(match max_ts {
                 Some(prev) => if event.t_event > prev { event.t_event } else { prev },
                 None => event.t_event,
             });
+        }
+        if !batch.is_empty() {
+            qdb.write_lines(&batch).await?;
         }
         let write_ms = write_start.elapsed().as_millis() as u64;
 
@@ -119,19 +123,23 @@ pub async fn poll_odds(mut qdb: QuestDbClient, cfg: PollConfig) -> Result<()> {
 
         let mut max_ts = since;
         let write_start = Instant::now();
+        let mut batch: Vec<String> = Vec::new();
         for odds in odds_list.iter() {
             if !dedup.allow(odds_key(odds)) {
                 continue;
             }
-            qdb.write_line(&odds_to_ilp(odds)).await?;
+            batch.push(odds_to_ilp(odds));
             if let Some(brain) = &cfg.brain {
                 let decision = brain.send_odds(odds).await?;
-                qdb.write_line(&decision_to_ilp(&decision)).await?;
+                batch.push(decision_to_ilp(&decision));
             }
             max_ts = Some(match max_ts {
                 Some(prev) => if odds.t_recv > prev { odds.t_recv } else { prev },
                 None => odds.t_recv,
             });
+        }
+        if !batch.is_empty() {
+            qdb.write_lines(&batch).await?;
         }
         let write_ms = write_start.elapsed().as_millis() as u64;
 
@@ -170,11 +178,13 @@ fn event_key(event: &Event) -> String {
 
 fn odds_key(odds: &Odds) -> String {
     format!(
-        "{}|{}|{}|{}|{}",
+        "{}|{}|{}|{}|{:?}|{:?}|{}",
         odds.match_id,
         odds.t_recv.timestamp_nanos_opt().unwrap_or(0),
         odds.market,
         odds.selection,
+        odds.line,
+        odds.point,
         odds.is_suspended
     )
 }

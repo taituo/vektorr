@@ -20,5 +20,10 @@ pub struct Odds {
     pub market: String,
     pub selection: String,
     pub price: f64,
+    #[serde(default)]
+    pub line: Option<f64>,
+    #[serde(default)]
+    pub point: Option<f64>,
+    #[serde(default)]
     pub is_suspended: bool,
 }

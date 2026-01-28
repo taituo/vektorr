@@ -49,7 +49,7 @@ curl -X POST http://localhost:8080/event \
 ```bash
 curl -X POST http://localhost:8080/odds \
   -H 'Content-Type: application/json' \
-  -d '{"match_id":"m1","t_seen":"2026-01-27T12:00:00Z","t_recv":"2026-01-27T12:00:00Z","market":"OU_2.5","selection":"OVER","price":2.05,"is_suspended":false}'
+  -d '{"match_id":"m1","t_seen":"2026-01-27T12:00:00Z","t_recv":"2026-01-27T12:00:00Z","market":"OU_2.5","selection":"OVER","price":2.05,"line":2.5,"point":2.5,"is_suspended":false}'
 ```
 
 ## Run HTTP Polling Adapter
@@ -122,7 +122,7 @@ cargo run -- \
 
 - `odds`:
   - tags: `match_id`, `market`, `selection`
-  - fields: `price`, `is_suspended`, `latency_ms`
+  - fields: `price`, `line`, `point`, `is_suspended`, `latency_ms`
   - timestamp: `t_recv`
 
 ## QuestDB DDL & Queries

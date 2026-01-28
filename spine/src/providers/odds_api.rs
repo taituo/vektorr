@@ -6,11 +6,14 @@ use std::time::Instant;
 use tokio::time::sleep;
 
 use crate::brain::BrainClient;
-use crate::ilp::{decision_to_ilp, odds_to_ilp};
+use crate::ilp::{decision_to_ilp, match_map_to_ilp, odds_to_ilp};
+use crate::mapping::MatchResolver;
 use crate::match_id::canonical_match_id;
 use crate::polling::{poll_sleep_ms, Deduper, next_backoff};
 use crate::questdb::QuestDbClient;
 use crate::types::Odds;
+use std::sync::Arc;
+use tokio::sync::Mutex;
 
 #[derive(Clone)]
 pub struct OddsApiConfig {
@@ -25,6 +28,7 @@ pub struct OddsApiConfig {
     pub dedup_capacity: usize,
     pub max_backoff_ms: u64,
     pub brain: Option<BrainClient>,
+    pub match_resolver: Option<Arc<Mutex<MatchResolver>>>,
 }
 
 #[derive(Debug, Deserialize)]
@@ -58,6 +62,8 @@ struct Market {
     key: String,
     last_update: DateTime<Utc>,
     outcomes: Vec<Outcome>,
+    #[serde(default, alias = "is_suspended", alias = "suspended")]
+    is_suspended: Option<bool>,
 }
 
 #[derive(Debug, Deserialize)]
@@ -113,8 +119,40 @@ pub async fn run_odds_api(mut qdb: QuestDbClient, cfg: OddsApiConfig) -> Result<
             let events: Vec<OddsApiEvent> = resp.json().await.context("odds api json")?;
 
             let write_start = Instant::now();
+            let mut batch: Vec<String> = Vec::new();
             for event in events.iter() {
-                let match_id = canonical_match_id(&event.home_team, &event.away_team, event.commence_time);
+                let provider_match_id = event.id.clone();
+                let (match_id, map_line) = if let Some(resolver) = &cfg.match_resolver {
+                    let mut resolver = resolver.lock().await;
+                    let res = resolver.resolve(
+                        "odds_api",
+                        &provider_match_id,
+                        &event.home_team,
+                        &event.away_team,
+                        event.commence_time,
+                    );
+                    let line = if res.is_new {
+                        Some(match_map_to_ilp(
+                            "odds_api",
+                            &provider_match_id,
+                            &res.match_id,
+                            &event.home_team,
+                            &event.away_team,
+                            event.commence_time,
+                        ))
+                    } else {
+                        None
+                    };
+                    (res.match_id, line)
+                } else {
+                    (
+                        canonical_match_id(&event.home_team, &event.away_team, event.commence_time),
+                        None,
+                    )
+                };
+                if let Some(line) = map_line {
+                    batch.push(line);
+                }
                 for bookmaker in event.bookmakers.iter() {
                     for market in bookmaker.markets.iter() {
                         for outcome in market.outcomes.iter() {
@@ -126,6 +164,8 @@ pub async fn run_odds_api(mut qdb: QuestDbClient, cfg: OddsApiConfig) -> Result<
                             let selection = selection.unwrap();
                             let t_seen = market.last_update;
                             let t_recv = Utc::now();
+                            let line = outcome.point;
+                            let point = outcome.point;
 
                             let odds = Odds {
                                 match_id: match_id.clone(),
@@ -134,7 +174,9 @@ pub async fn run_odds_api(mut qdb: QuestDbClient, cfg: OddsApiConfig) -> Result<
                                 market: market_name,
                                 selection,
                                 price: outcome.price,
-                                is_suspended: false,
+                                line,
+                                point,
+                                is_suspended: market.is_suspended.unwrap_or(false),
                             };
 
                             let dedup_key = format!(
@@ -150,14 +192,17 @@ pub async fn run_odds_api(mut qdb: QuestDbClient, cfg: OddsApiConfig) -> Result<
                                 continue;
                             }
 
-                            qdb.write_line(&odds_to_ilp(&odds)).await?;
+                            batch.push(odds_to_ilp(&odds));
                             if let Some(brain) = &cfg.brain {
                                 let decision = brain.send_odds(&odds).await?;
-                                qdb.write_line(&decision_to_ilp(&decision)).await?;
+                                batch.push(decision_to_ilp(&decision));
                             }
                         }
                     }
                 }
+            }
+            if !batch.is_empty() {
+                qdb.write_lines(&batch).await?;
             }
             write_ms = write_ms.max(write_start.elapsed().as_millis() as u64);
         }

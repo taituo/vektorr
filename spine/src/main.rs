@@ -11,6 +11,7 @@ use tokio::sync::Mutex;
 
 mod brain;
 mod ilp;
+mod mapping;
 mod match_id;
 mod polling;
 mod providers;
@@ -20,6 +21,7 @@ mod types;
 
 use brain::BrainClient;
 use ilp::{decision_to_ilp, event_to_ilp, odds_to_ilp};
+use mapping::MatchResolver;
 use questdb::QuestDbClient;
 use source::{http_poll::PollConfig, jsonl::read_jsonl};
 use types::{Event, Odds};
@@ -289,6 +291,7 @@ async fn run_providers(args: Args) -> Result<()> {
         None => None,
     };
     let mut handles = Vec::new();
+    let resolver = Arc::new(Mutex::new(MatchResolver::new()));
 
     if let Some(token) = args.sportmonks_token.clone() {
         let leagues = args
@@ -315,6 +318,7 @@ async fn run_providers(args: Args) -> Result<()> {
             dedup_capacity: args.dedup_cap,
             max_backoff_ms: args.max_backoff_ms,
             brain: brain.clone(),
+            match_resolver: Some(resolver.clone()),
         };
         handles.push(tokio::spawn(async move {
             providers::sportmonks::run_sportmonks(qdb, cfg).await
@@ -348,6 +352,7 @@ async fn run_providers(args: Args) -> Result<()> {
             dedup_capacity: args.dedup_cap,
             max_backoff_ms: args.max_backoff_ms,
             brain: brain.clone(),
+            match_resolver: Some(resolver.clone()),
         };
         handles.push(tokio::spawn(async move {
             providers::odds_api::run_odds_api(qdb, cfg).await
