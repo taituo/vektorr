@@ -63,7 +63,7 @@ class MatchCell(Static):
         self.remove_class("idle")
         self.add_class(style)
 
-class BotMatrix(App):
+class VektorrMatrix(App):
     """Old-skool Stock Broker Matrix for picking raisins."""
 
     CSS = """
@@ -210,4 +210,4 @@ class BotMatrix(App):
             self.query_one(f"#match_{i}").match_data = {}
 
 if __name__ == "__main__":
-    BotMatrix().run()
+    VektorrMatrix().run()

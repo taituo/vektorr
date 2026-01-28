@@ -82,7 +82,7 @@ class MatchBuffer:
         return max(1, min(90, minutes))
 
 
-app = FastAPI()
+app = FastAPI(title="Vektorr Brain API")
 engine = BettingEngine(load_config())
 state: Dict[str, MatchBuffer] = defaultdict(MatchBuffer)
 STATE_TTL_MINUTES = int(os.getenv("BRAIN_STATE_TTL_MINUTES", "120"))
