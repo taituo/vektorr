@@ -89,6 +89,25 @@ cargo run -- --ws-url ws://localhost:9002/feed --brain-url http://localhost:8090
 
 ## Provider Adapters (SportMonks + The Odds API)
 
+### Provider config (YAML)
+Copy the example and fill in your league IDs / sport keys:
+
+```bash
+cp provider_config.example.yaml provider_config.yaml
+```
+
+Then run with:
+
+```bash
+cargo run -- --provider-config provider_config.yaml --brain-url http://localhost:8090
+```
+
+Keys can also be provided via env:
+```bash
+export SPORTMONKS_TOKEN=...
+export ODDS_API_KEY=...
+```
+
 ### List available sports (The Odds API)
 ```bash
 cargo run -- --odds-api-list-sports --odds-api-key YOUR_KEY

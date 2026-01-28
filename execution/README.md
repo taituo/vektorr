@@ -15,3 +15,7 @@ python3 execution_service.py
 
 ## QuestDB Logging
 If `questdb.log_to_questdb=true`, executions are inserted into the `executions` table.
+
+## Mapping requirement (Betfair)
+Betfair mode now looks up `market_map` in QuestDB using `market` + `selection` (and line for OU).
+If no mapping is found, the decision is skipped with `reason=MAPPING_MISSING`.

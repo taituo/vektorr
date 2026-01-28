@@ -54,12 +54,14 @@ Live-vedonlyönnin päätösmoottori. Paper trading MVP + Phase 1 tuotantoinfra.
 │   └── execution_adapter.py  # ABC + ManualExecutionAdapter + StubAdapter
 │
 ├── spine/               # Rust-ingestor (Phase 1)
+│   ├── provider_config.example.yaml  # Provider-asetusten pohja (leagues/sports/keys)
 │   ├── src/main.rs      #   CLI: --listen, --ws-url, --events-url, provider flags
 │   ├── src/types.rs     #   Event, Odds structs (serde)
 │   ├── src/ilp.rs       #   ILP-serialisointi (events, odds, decisions)
 │   ├── src/questdb.rs   #   TCP-yhteys QuestDB ILP:hen (port 9009)
 │   ├── src/brain.rs     #   BrainClient – HTTP POST /event, /odds
 │   ├── src/match_id.rs  #   canonical_match_id(home, away, date)
+│   ├── src/mapping.rs   #   provider_id -> match_id (match_map-taulu)
 │   ├── src/polling.rs   #   Deduper + backoff + rate limiting
 │   ├── src/source/      #   jsonl.rs, http_poll.rs, ws.rs
 │   └── src/providers/   #   sportmonks.rs, odds_api.rs
@@ -71,13 +73,17 @@ Live-vedonlyönnin päätösmoottori. Paper trading MVP + Phase 1 tuotantoinfra.
 │
 ├── infra/questdb/       # Tietokantainfra
 │   ├── docker-compose.yml    # QuestDB + init-palvelu
-│   ├── schema.sql            # events, odds, decisions, match_map, team_map
+│   ├── schema.sql            # events, odds(line/point), decisions, match_map, team_map
 │   └── init.py               # Ajaa schema.sql QuestDB:hen
 │
 ├── mapping/             # CSV-pohjat provider-mappingille (tyhjät)
 │   ├── match_map.csv
 │   ├── team_map.csv
 │   └── market_map.csv
+│
+├── tools/               # Mapping-CSV workflow
+│   ├── load_mapping.py      # CSV -> QuestDB
+│   └── export_mapping.py    # QuestDB -> CSV
 │
 ├── tests/
 │   ├── test_engine.py        # TPS, gates, todennäköisyys (150+ riviä)
@@ -156,6 +162,7 @@ cd infra/questdb && docker compose up -d
 cd spine && cargo run -- --listen 0.0.0.0:8080 --qdb-host localhost
 cargo run -- --sportmonks-token XXX --sportmonks-leagues 271,501
 cargo run -- --odds-api-key XXX --odds-api-sports soccer_epl
+cargo run -- --provider-config provider_config.yaml --brain-url http://localhost:8090
 
 # Monitor TUI
 python monitor.py
@@ -177,16 +184,18 @@ python test_integration.py  # E2E: käynnistää brain_api:n subprosessina
 - Poisson-malli yksinkertaistettu (ei pelaajatason dataa)
 - brain_api.py: globaali state ei thread-safe
 - Betfair-adapteri on stub (ei toteutettu)
-- Mapping-CSV:t tyhjät – provider→canonical -resoluutio puuttuu
+- Mapping-CSV workflow on olemassa, mutta CSV:t pitää yhä täyttää
+- Provider-konfigi on pohjana; league-IDt ja API-avaimet puuttuvat
+- Execution käyttää market_mapia vain market+selection -tasolla (selection_id puuttuu)
 - Ei liability-seurantaa tai cross-match exposure -rajoituksia
 - Flat staking (ei Kelly-kriteeritä)
 
 ## Aktiiviset prioriteetit (todo_wednesday.md)
 
-1. **Schema upgrade** – `line`, `point`, `is_suspended` kenttien lisäys Odds-schemaan
-2. **Match identity** – provider ID → internal match ID mapping-taulu
-3. **League filtering** – ingestion rajaus EPL, LaLiga, Serie A jne.
-4. **Batch writes** – QuestDB bulk insert rivi-kerrallaan kirjoituksen sijaan
-5. **Mapping workflow** – match/team/market CSV:t + täyttötyökalut
-6. **Provider configs** – SportMonks league-IDt, Odds API sport keys
-7. **Execution hardening** – QuestDB-logging, mapping-resoluutio
+1. **Schema upgrade** – `line`, `point`, `is_suspended` kentät (done)
+2. **Match identity** – provider ID → internal match ID + match_map (done)
+3. **League filtering** – SportMonks filtteri done; league-IDt vielä täyttämättä
+4. **Batch writes** – QuestDB batch insert (done)
+5. **Mapping workflow** – CSV import/export tools (done), data täyttö puuttuu
+6. **Provider configs** – config‑pohja tehty, avaimet + IDt puuttuvat
+7. **Execution hardening** – QuestDB‑logging ok, mapping‑resoluutio vielä stub

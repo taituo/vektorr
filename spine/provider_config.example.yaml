@@ -1,0 +1,23 @@
+# Provider config for Spine (keys can be set later).
+
+sportmonks:
+  token: "" # or set via SPORTMONKS_TOKEN env
+  leagues:
+    - "EPL_LEAGUE_ID"
+    - "LALIGA_LEAGUE_ID"
+    - "SERIE_A_LEAGUE_ID"
+    - "BUNDESLIGA_LEAGUE_ID"
+    - "LIGUE1_LEAGUE_ID"
+  base_url: "https://api.sportmonks.com/v3/football"
+  poll_ms: 2000
+
+odds_api:
+  api_key: "" # or set via ODDS_API_KEY env
+  sports:
+    - "ODDS_API_SPORT_KEY_1"
+    - "ODDS_API_SPORT_KEY_2"
+    - "ODDS_API_SPORT_KEY_3"
+  regions: "eu"
+  markets: "totals"
+  base_url: "https://api.the-odds-api.com"
+  poll_ms: 2000

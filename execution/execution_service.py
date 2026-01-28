@@ -80,6 +80,36 @@ def load_decisions(host: str, port: int, last_ts: Optional[str]) -> List[Decisio
     return parse_decisions(dataset, columns)
 
 
+def parse_line_from_market(market: Optional[str]) -> Optional[float]:
+    if not market:
+        return None
+    if market.startswith("OU_"):
+        try:
+            return float(market.replace("OU_", ""))
+        except ValueError:
+            return None
+    return None
+
+
+def resolve_market_mapping(host: str, port: int, provider: str, decision: Decision) -> Optional[str]:
+    if not decision.market or not decision.selection:
+        return None
+    line = parse_line_from_market(decision.market)
+    where = (
+        "provider = " + sql_escape(provider) +
+        " AND market = " + sql_escape(decision.market) +
+        " AND selection = " + sql_escape(decision.selection)
+    )
+    if line is not None:
+        where += f" AND line = {line}"
+    sql = f"SELECT provider_market_id FROM market_map WHERE {where} LIMIT 1"
+    raw = query_questdb(host, port, sql)
+    dataset = raw.get("dataset", [])
+    if not dataset:
+        return None
+    return dataset[0][0]
+
+
 def should_execute(decision: Decision, config: dict) -> bool:
     if not decision.can_bet:
         return False
@@ -149,9 +179,22 @@ def main():
                 continue
             if not risk_limits_ok(d, config):
                 continue
-            if mode == "betfair" and adapter:
-                # TODO: market mapping required
-                result = adapter.place_order("MARKET_ID", "SELECTION_ID", d.odds_price, config["risk"]["stake"])
+    if mode == "betfair" and adapter:
+                market_id = resolve_market_mapping(
+                    qdb.get("host", "localhost"),
+                    qdb.get("port", 9000),
+                    "betfair",
+                    d,
+                )
+                if not market_id:
+                    result = ExecResult(status="SKIP", reason="MAPPING_MISSING")
+                else:
+                    result = adapter.place_order(
+                        market_id,
+                        d.selection or "",
+                        d.odds_price,
+                        config["risk"]["stake"],
+                    )
             else:
                 result = dry_run_execute(d)
 

@@ -14,6 +14,7 @@ mod ilp;
 mod mapping;
 mod match_id;
 mod polling;
+mod provider_config;
 mod providers;
 mod questdb;
 mod source;
@@ -22,9 +23,16 @@ mod types;
 use brain::BrainClient;
 use ilp::{decision_to_ilp, event_to_ilp, odds_to_ilp};
 use mapping::MatchResolver;
+use provider_config::{load_provider_config, values_to_strings, ProviderConfig};
 use questdb::QuestDbClient;
 use source::{http_poll::PollConfig, jsonl::read_jsonl};
 use types::{Event, Odds};
+
+const DEFAULT_ODDS_API_BASE: &str = "https://api.the-odds-api.com";
+const DEFAULT_ODDS_API_MARKETS: &str = "totals";
+const DEFAULT_ODDS_API_REGIONS: &str = "eu";
+const DEFAULT_SPORTMONKS_BASE: &str = "https://api.sportmonks.com/v3/football";
+const DEFAULT_PROVIDER_POLL_MS: u64 = 2000;
 
 #[derive(Parser, Debug)]
 #[command(name = "spine-ingestor", version, about = "Rust ingestor pushing data to QuestDB via ILP")]
@@ -75,7 +83,7 @@ struct Args {
     #[arg(long, default_value = "https://api.the-odds-api.com")]
     odds_api_base: String,
     /// Odds API poll interval ms
-    #[arg(long, default_value_t = 2000)]
+    #[arg(long, default_value_t = DEFAULT_PROVIDER_POLL_MS)]
     odds_api_poll_ms: u64,
     /// SportMonks token
     #[arg(long)]
@@ -87,8 +95,11 @@ struct Args {
     #[arg(long, default_value = "https://api.sportmonks.com/v3/football")]
     sportmonks_base: String,
     /// SportMonks poll interval ms
-    #[arg(long, default_value_t = 2000)]
+    #[arg(long, default_value_t = DEFAULT_PROVIDER_POLL_MS)]
     sportmonks_poll_ms: u64,
+    /// Provider config YAML (leagues/sports/keys)
+    #[arg(long)]
+    provider_config: Option<String>,
     /// Run HTTP server for event/odds ingestion (e.g. 0.0.0.0:8080)
     #[arg(long)]
     listen: Option<String>,
@@ -128,7 +139,12 @@ type AppResult<T> = std::result::Result<T, (StatusCode, String)>;
 
 #[tokio::main]
 async fn main() -> Result<()> {
-    let args = Args::parse();
+    let mut args = Args::parse();
+    if let Some(path) = args.provider_config.clone() {
+        let cfg = load_provider_config(&path)?;
+        apply_provider_config(&mut args, cfg);
+    }
+    apply_provider_env(&mut args);
 
     if args.listen.is_some() && (args.events_url.is_some() || args.odds_url.is_some()) {
         anyhow::bail!("--listen cannot be combined with --events-url/--odds-url");
@@ -208,6 +224,107 @@ async fn main() -> Result<()> {
     }
 
     Ok(())
+}
+
+fn apply_provider_env(args: &mut Args) {
+    if args.sportmonks_token.is_none() {
+        if let Ok(token) = std::env::var("SPORTMONKS_TOKEN") {
+            let token = token.trim().to_string();
+            if !token.is_empty() {
+                args.sportmonks_token = Some(token);
+            }
+        }
+    }
+    if args.odds_api_key.is_none() {
+        if let Ok(key) = std::env::var("ODDS_API_KEY") {
+            let key = key.trim().to_string();
+            if !key.is_empty() {
+                args.odds_api_key = Some(key);
+            }
+        }
+    }
+}
+
+fn apply_provider_config(args: &mut Args, cfg: ProviderConfig) {
+    if let Some(sportmonks) = cfg.sportmonks {
+        if args.sportmonks_token.is_none() {
+            if let Some(token) = non_empty(sportmonks.token) {
+                args.sportmonks_token = Some(token);
+            }
+        }
+        if is_missing_list(&args.sportmonks_leagues) {
+            if let Some(leagues) = sportmonks.leagues {
+                let leagues = values_to_strings(leagues);
+                if !leagues.is_empty() {
+                    args.sportmonks_leagues = Some(leagues.join(","));
+                }
+            }
+        }
+        if args.sportmonks_base == DEFAULT_SPORTMONKS_BASE {
+            if let Some(base) = non_empty(sportmonks.base_url) {
+                args.sportmonks_base = base;
+            }
+        }
+        if args.sportmonks_poll_ms == DEFAULT_PROVIDER_POLL_MS {
+            if let Some(poll_ms) = sportmonks.poll_ms {
+                args.sportmonks_poll_ms = poll_ms;
+            }
+        }
+    }
+
+    if let Some(odds) = cfg.odds_api {
+        if args.odds_api_key.is_none() {
+            if let Some(key) = non_empty(odds.api_key) {
+                args.odds_api_key = Some(key);
+            }
+        }
+        if is_missing_list(&args.odds_api_sports) {
+            if let Some(sports) = odds.sports {
+                let sports = values_to_strings(sports);
+                if !sports.is_empty() {
+                    args.odds_api_sports = Some(sports.join(","));
+                }
+            }
+        }
+        if args.odds_api_base == DEFAULT_ODDS_API_BASE {
+            if let Some(base) = non_empty(odds.base_url) {
+                args.odds_api_base = base;
+            }
+        }
+        if args.odds_api_regions == DEFAULT_ODDS_API_REGIONS {
+            if let Some(regions) = non_empty(odds.regions) {
+                args.odds_api_regions = regions;
+            }
+        }
+        if args.odds_api_markets == DEFAULT_ODDS_API_MARKETS {
+            if let Some(markets) = non_empty(odds.markets) {
+                args.odds_api_markets = markets;
+            }
+        }
+        if args.odds_api_poll_ms == DEFAULT_PROVIDER_POLL_MS {
+            if let Some(poll_ms) = odds.poll_ms {
+                args.odds_api_poll_ms = poll_ms;
+            }
+        }
+    }
+}
+
+fn non_empty(value: Option<String>) -> Option<String> {
+    value.and_then(|v| {
+        let trimmed = v.trim().to_string();
+        if trimmed.is_empty() {
+            None
+        } else {
+            Some(trimmed)
+        }
+    })
+}
+
+fn is_missing_list(value: &Option<String>) -> bool {
+    match value {
+        None => true,
+        Some(v) => v.trim().is_empty(),
+    }
 }
 
 async fn run_polling(args: Args) -> Result<()> {
