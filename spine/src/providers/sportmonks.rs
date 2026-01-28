@@ -143,8 +143,8 @@ pub async fn run_sportmonks(mut qdb: QuestDbClient, cfg: SportMonksConfig) -> Re
                         "sportmonks",
                         &provider_match_id,
                         &res.match_id,
-                        &home,
-                        &away,
+                        &res.home,
+                        &res.away,
                         kickoff,
                     ))
                 } else {

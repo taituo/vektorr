@@ -12,8 +12,8 @@
 - Nykyinen team name + kickoff time -sovitus on hauras (Man Utd vs Manchester United)
 - **Tehtävä:** Toteuta `match_map`-taulu (Provider ID -> Internal Match ID) tietokantaan
 - **Status:** DONE (MatchResolver + match_map ILP)
-- **TODO:** Päivitä `spine/src/mapping.rs` käyttämään `TeamMapper`-logiikkaa (normalisointi ennen ID-luontia)
-- **TODO:** Täydennä `mappings.yaml` Valioliigan ja La Ligan joukkue-variaatioilla
+- **Status:** DONE (TeamMapper normalisointi ennen ID-luontia)
+- **Status:** DONE (mappings.yaml laajennettu EPL + La Liga)
 - Varmistaa että SportMonks-eventit ja Odds API -kerroindata osuvat oikeaan otteluun
 
 ### 3. Ingestion Optimization (Filtering)

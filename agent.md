@@ -61,7 +61,7 @@ Live-vedonlyönnin päätösmoottori. Paper trading MVP + Phase 1 tuotantoinfra.
 │   ├── src/questdb.rs   #   TCP-yhteys QuestDB ILP:hen (port 9009)
 │   ├── src/brain.rs     #   BrainClient – HTTP POST /event, /odds
 │   ├── src/match_id.rs  #   canonical_match_id(home, away, date)
-│   ├── src/mapping.rs   #   provider_id -> match_id (match_map-taulu)
+│   ├── src/mapping.rs   #   provider_id -> match_id + TeamMapper (mappings.yaml)
 │   ├── src/polling.rs   #   Deduper + backoff + rate limiting
 │   ├── src/source/      #   jsonl.rs, http_poll.rs, ws.rs
 │   └── src/providers/   #   sportmonks.rs, odds_api.rs
@@ -187,13 +187,14 @@ python test_integration.py  # E2E: käynnistää brain_api:n subprosessina
 - Mapping-CSV workflow on olemassa, mutta CSV:t pitää yhä täyttää
 - Provider-konfigi on pohjana; league-IDt ja API-avaimet puuttuvat
 - Execution käyttää market_mapia vain market+selection -tasolla (selection_id puuttuu)
+- TeamMapper (mappings.yaml) kattaa vain osan liigoista
 - Ei liability-seurantaa tai cross-match exposure -rajoituksia
 - Flat staking (ei Kelly-kriteeritä)
 
 ## Aktiiviset prioriteetit (todo_wednesday.md)
 
 1. **Schema upgrade** – `line`, `point`, `is_suspended` kentät (done)
-2. **Match identity** – provider ID → internal match ID + match_map (done)
+2. **Match identity** – provider ID → internal match ID + TeamMapper (done)
 3. **League filtering** – SportMonks filtteri done; league-IDt vielä täyttämättä
 4. **Batch writes** – QuestDB batch insert (done)
 5. **Mapping workflow** – CSV import/export tools (done), data täyttö puuttuu

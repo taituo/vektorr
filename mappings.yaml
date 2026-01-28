@@ -39,6 +39,159 @@ TEAMS:
     - Bodø/Glimt
     - FK Bodo/Glimt
 
+  # PREMIER LEAGUE
+  Arsenal:
+    - Arsenal
+    - Arsenal FC
+  Aston Villa:
+    - Aston Villa
+    - Aston Villa FC
+  Bournemouth:
+    - Bournemouth
+    - AFC Bournemouth
+  Brentford:
+    - Brentford
+    - Brentford FC
+  Brighton & Hove Albion:
+    - Brighton & Hove Albion
+    - Brighton and Hove Albion
+    - Brighton Hove Albion
+    - Brighton
+  Burnley:
+    - Burnley
+    - Burnley FC
+  Chelsea:
+    - Chelsea
+    - Chelsea FC
+  Crystal Palace:
+    - Crystal Palace
+    - Crystal Palace FC
+  Everton:
+    - Everton
+    - Everton FC
+  Fulham:
+    - Fulham
+    - Fulham FC
+  Liverpool:
+    - Liverpool
+    - Liverpool FC
+  Luton Town:
+    - Luton Town
+    - Luton Town FC
+  Manchester City:
+    - Manchester City
+    - Manchester City FC
+    - Man City
+  Manchester United:
+    - Manchester United
+    - Manchester United FC
+    - Man United
+    - Man Utd
+  Newcastle United:
+    - Newcastle United
+    - Newcastle United FC
+    - Newcastle
+  Nottingham Forest:
+    - Nottingham Forest
+    - Notts Forest
+    - Nottm Forest
+  Sheffield United:
+    - Sheffield United
+    - Sheffield Utd
+    - Sheff Utd
+  Tottenham Hotspur:
+    - Tottenham Hotspur
+    - Tottenham Hotspur FC
+    - Tottenham
+    - Spurs
+  West Ham United:
+    - West Ham United
+    - West Ham Utd
+    - West Ham
+  Wolverhampton Wanderers:
+    - Wolverhampton Wanderers
+    - Wolverhampton Wanderers FC
+    - Wolverhampton
+    - Wolves
+
+  # LA LIGA
+  Alaves:
+    - Deportivo Alavés
+    - Deportivo Alaves
+    - Alavés
+    - Alaves
+  Almeria:
+    - UD Almeria
+    - UD Almería
+    - Almería
+    - Almeria
+  Athletic Club:
+    - Athletic Club
+    - Athletic Bilbao
+  Atletico Madrid:
+    - Atlético Madrid
+    - Atletico Madrid
+    - Atletico
+    - Atlético
+  Barcelona:
+    - FC Barcelona
+    - Barcelona
+    - Barça
+    - Barca
+  Cadiz:
+    - Cádiz CF
+    - Cadiz CF
+    - Cádiz
+    - Cadiz
+  Celta Vigo:
+    - RC Celta
+    - Celta de Vigo
+    - Celta Vigo
+  Espanyol:
+    - RCD Espanyol
+    - Espanyol
+  Getafe:
+    - Getafe CF
+    - Getafe
+  Girona:
+    - Girona FC
+    - Girona
+  Granada:
+    - Granada CF
+    - Granada
+  Las Palmas:
+    - UD Las Palmas
+    - Las Palmas
+  Mallorca:
+    - RCD Mallorca
+    - Mallorca
+  Osasuna:
+    - CA Osasuna
+    - Osasuna
+  Rayo Vallecano:
+    - Rayo Vallecano
+    - Rayo Vallecano de Madrid
+    - Rayo
+  Real Betis:
+    - Real Betis
+    - Real Betis Balompie
+    - Real Betis Balompié
+  Real Madrid:
+    - Real Madrid
+    - Real Madrid CF
+  Real Sociedad:
+    - Real Sociedad
+    - Real Sociedad de Fútbol
+  Sevilla:
+    - Sevilla
+    - Sevilla FC
+  Valencia:
+    - Valencia
+    - Valencia CF
+  Villarreal:
+    - Villarreal
+    - Villarreal CF
+
 LEAGUES:
   Veikkausliiga:
     - Finland Veikkausliiga

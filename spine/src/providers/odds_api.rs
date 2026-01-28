@@ -136,8 +136,8 @@ pub async fn run_odds_api(mut qdb: QuestDbClient, cfg: OddsApiConfig) -> Result<
                             "odds_api",
                             &provider_match_id,
                             &res.match_id,
-                            &event.home_team,
-                            &event.away_team,
+                            &res.home,
+                            &res.away,
                             event.commence_time,
                         ))
                     } else {

@@ -108,6 +108,13 @@ export SPORTMONKS_TOKEN=...
 export ODDS_API_KEY=...
 ```
 
+### Team name normalization
+Spine will normalize team names before building match IDs if `mappings.yaml` exists.
+Override path with:
+```bash
+export TEAM_MAPPINGS_PATH=/path/to/mappings.yaml
+```
+
 ### List available sports (The Odds API)
 ```bash
 cargo run -- --odds-api-list-sports --odds-api-key YOUR_KEY
