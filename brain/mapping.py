@@ -1,3 +1,14 @@
+"""
+Brain-side team/league name normalization.
+
+NOTE: In production, Spine (Rust) handles team normalization via TeamMapper
+before data reaches Brain. This module exists as a fallback for cases where
+Brain receives data directly (e.g. manual testing, standalone mode without Spine).
+
+The authoritative normalization lives in spine/src/mapping.rs.
+Both read the same mappings.yaml file.
+"""
+
 import yaml
 import logging
 import os
