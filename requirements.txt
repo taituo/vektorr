@@ -1,7 +1,20 @@
+# Core
 pydantic>=2.0.0
 pyyaml
 numpy
+
+# API
 fastapi
-uvicorn
+uvicorn[standard]
 requests
+websockets
+
+# UI
 textual
+
+# Testing
+pytest
+pytest-asyncio
+
+# Optional: Database
+# psycopg2-binary  # For QuestDB PostgreSQL wire

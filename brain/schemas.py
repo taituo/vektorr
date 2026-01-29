@@ -31,3 +31,9 @@ class MatchState(BaseModel):
     t_recv_latest: datetime
     event_latency_p95: float = 0.0
     odds_latency_p95: float = 0.0
+    odds_price_prev: Optional[float] = None
+    odds_price_signal: Optional[float] = None
+    odds_signal_age_s: Optional[float] = None
+    odds_price_5s_ago: Optional[float] = None
+    odds_price_30s_ago: Optional[float] = None
+    odds_price_60s_ago: Optional[float] = None

@@ -1,8 +1,31 @@
 # MVP Thresholds
-L_MAX: 3.0              # Max latency P95 in seconds
+L_MAX: 3.0              # Max latency P95 in seconds (default)
+
+# TPS-adaptive latency limits (stricter in volatile states)
+LATENCY_LIMITS:
+  LOW: 4.0
+  MID: 3.0
+  PRESS: 2.0
+  CHAOS: 1.5
+
+# Dynamic decay for xG weighting
+USE_WEIGHTED_XG: true
+XG_DECAY_RATE: 0.2         # ~5x decay over 10 minutes
 EV_MIN: 0.05            # 5% minimum expected value
 XG_10M_MIN: 0.2         # Min xG in last 10 min
 MAX_BETS_PER_MATCH: 1   # Max bets per match
+PRICE_MOVE_LIMIT: 0.03  # Max price move before blocking
+DISCONFIRM_LIMIT: 0.03  # Signal stale if price moves beyond this
+DISCONFIRM_MAX_AGE_S: 120
+PRICE_MOVED_ENABLED: true
+DISCONFIRM_ENABLED: true
+VIG_ENABLED: true
+MMS_GATE_ENABLED: true
+MMS_MIN: 0.03
+EXECUTION_RISK_ENABLED: true
+EXEC_MIN_FILL: 0.60
+EXEC_MIN_EV: 0.05
+EXEC_MAX_SLIPPAGE: 0.05
 
 # Execution
 REJECT_RATE: 0.20       # 20% simulated rejection rate
@@ -10,4 +33,10 @@ MAX_SLIPPAGE: 0.10      # Max price slippage on fill
 
 # Paper Trading
 WALLET_START: 1000.0    # Starting virtual balance
-STAKE: 10.0             # Flat stake per bet
+STAKE: 10.0             # Flat stake per bet (legacy fallback)
+
+# Smart Staking (Kelly Criterion)
+STAKING_MODE: kelly     # 'flat' or 'kelly'
+KELLY_FRACTION: 0.25    # Quarter Kelly (reduces variance)
+MIN_STAKE: 1.0          # Minimum stake floor
+MAX_STAKE_PCT: 0.05     # Max 5% of bankroll per bet

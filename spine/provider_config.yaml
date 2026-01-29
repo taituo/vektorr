@@ -1,0 +1,47 @@
+# ============================================================
+# VEKTORR - PROVIDER CONFIGURATION (THE LAUNCH KEY)
+# ============================================================
+# Use this file to connect Vektorr to the real world.
+# Get your keys at:
+# - SportMonks: https://www.sportmonks.com/
+# - The Odds API: https://the-odds-api.com/
+# ============================================================
+
+sportmonks:
+  # Paste your API Token here
+  token: "YOUR_SPORTMONKS_TOKEN_HERE"
+  leagues:
+    - 8    # Premier League
+    - 564  # La Liga
+    - 384  # Serie A
+    - 82   # Bundesliga
+    - 301  # Ligue 1
+    - 271  # Veikkausliiga (Finland)
+    - 325  # Allsvenskan (Sweden)
+    - 444  # Eliteserien (Norway)
+  base_url: "https://api.sportmonks.com/v3/football"
+  poll_ms: 2000
+
+odds_api:
+  # Paste your API Key here
+  api_key: "YOUR_ODDS_API_KEY_HERE"
+  sports:
+    - soccer_epl
+    - soccer_spain_la_liga
+    - soccer_italy_serie_a
+    - soccer_germany_bundesliga
+    - soccer_france_ligue_one
+    - soccer_finland_veikkausliiga
+    - soccer_sweden_allsvenskan
+    - soccer_norway_eliteserien
+  regions: "eu"
+  markets: "totals"
+  base_url: "https://api.the-odds-api.com"
+  poll_ms: 2000
+
+# ------------------------------------------------------------
+# FUTURE FRONTIER ADAPTERS (GRAY ZONE)
+# ------------------------------------------------------------
+# betsapi:
+#   token: "COMING_IN_TIER_1B"
+#   mode: "hoarding"

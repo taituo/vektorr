@@ -1,0 +1,138 @@
+version: '3.8'
+
+services:
+  # =============================================================================
+  # Core Services
+  # =============================================================================
+
+  brain:
+    build: .
+    container_name: vektorr-brain
+    restart: unless-stopped
+    ports:
+      - "8000:8000"
+    volumes:
+      - ./data:/app/data
+      - ./config.yaml:/app/config.yaml:ro
+    environment:
+      - BRAIN_CONFIG_JSON={"WALLET_START": 1000, "USE_WEIGHTED_XG": true}
+      - BRAIN_DECISIONS_LOG_PATH=/app/data/decisions.jsonl
+      - BRAIN_STATE_TTL_MINUTES=120
+      - QUESTDB_ENABLED=true
+      - QUESTDB_HOST=questdb
+      - QUESTDB_ILP_PORT=9009
+    healthcheck:
+      test: ["CMD", "curl", "-f", "http://localhost:8000/health"]
+      interval: 30s
+      timeout: 10s
+      retries: 3
+    depends_on:
+      - questdb
+    networks:
+      - vektorr
+
+  # =============================================================================
+  # Data Ingestion
+  # =============================================================================
+
+  provider-poller:
+    build: .
+    container_name: vektorr-provider-poller
+    restart: unless-stopped
+    command: python spine/provider_poller.py --config /app/spine/provider_config.yaml
+    volumes:
+      - ./spine/provider_config.yaml:/app/spine/provider_config.yaml:ro
+    environment:
+      - BRAIN_URL=http://brain:8000
+    depends_on:
+      - brain
+    networks:
+      - vektorr
+
+  websocket-feed:
+    build: .
+    container_name: vektorr-websocket-feed
+    restart: unless-stopped
+    command: python spine/websocket_feed.py --host 0.0.0.0 --port 8001
+    ports:
+      - "8001:8001"
+    environment:
+      - BRAIN_URL=http://brain:8000
+    depends_on:
+      - brain
+    networks:
+      - vektorr
+
+  # =============================================================================
+  # Database
+  # =============================================================================
+
+  questdb:
+    image: questdb/questdb:7.3.10
+    container_name: vektorr-questdb
+    restart: unless-stopped
+    ports:
+      - "9000:9000"   # Web Console
+      - "9009:9009"   # InfluxDB Line Protocol
+      - "8812:8812"   # PostgreSQL Wire
+    volumes:
+      - questdb-data:/var/lib/questdb
+      - ./infra/questdb/schema.sql:/docker-entrypoint-initdb.d/schema.sql:ro
+    environment:
+      - QDB_TELEMETRY_ENABLED=false
+    networks:
+      - vektorr
+
+  # =============================================================================
+  # Notifications (Optional)
+  # =============================================================================
+
+  telegram-bot:
+    build: .
+    container_name: vektorr-telegram-bot
+    restart: unless-stopped
+    command: python tools/telegram_bot.py
+    environment:
+      - TELEGRAM_BOT_TOKEN=${TELEGRAM_BOT_TOKEN:-}
+      - TELEGRAM_CHAT_ID=${TELEGRAM_CHAT_ID:-}
+      - BRAIN_URL=http://brain:8000
+    depends_on:
+      - brain
+    networks:
+      - vektorr
+    profiles:
+      - notifications
+
+  # =============================================================================
+  # Monitoring
+  # =============================================================================
+
+  healthcheck:
+    image: curlimages/curl:latest
+    container_name: vektorr-healthcheck
+    restart: unless-stopped
+    entrypoint: >
+      /bin/sh -c "
+      while true; do
+        echo \"[\$$(date -Iseconds)] Checking services...\"
+        curl -sf http://brain:8000/health && echo ' Brain: OK' || echo ' Brain: FAIL'
+        curl -sf http://questdb:9000 && echo ' QuestDB: OK' || echo ' QuestDB: FAIL'
+        sleep 300
+      done
+      "
+    depends_on:
+      - brain
+      - questdb
+    networks:
+      - vektorr
+
+# =============================================================================
+# Volumes & Networks
+# =============================================================================
+
+volumes:
+  questdb-data:
+
+networks:
+  vektorr:
+    driver: bridge
