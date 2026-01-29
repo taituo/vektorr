@@ -1,6 +1,6 @@
 #!/usr/bin/env python3
 """
-Vektorr CLI - Operational command-line interface.
+Doomsignal CLI - Operational command-line interface.
 
 Commands:
     status      Show system status
@@ -33,7 +33,7 @@ def cmd_status(args):
     tracker = MetricsTracker(bankroll=args.bankroll or 1000)
 
     print("\n" + "=" * 60)
-    print("VEKTORR SYSTEM STATUS")
+    print("DOOMSIGNAL SYSTEM STATUS")
     print("=" * 60)
 
     print(f"\n📊 Stage: {rollout.current_stage.value.upper()}")
@@ -273,15 +273,15 @@ def cmd_experiments(args):
 
 def main():
     parser = argparse.ArgumentParser(
-        description="Vektorr CLI",
+        description="Doomsignal CLI",
         formatter_class=argparse.RawDescriptionHelpFormatter,
         epilog="""
 Examples:
-  vektorr status --stage paper
-  vektorr graduation --bets 500 --wins 280 --pnl 150 --staked 5000
-  vektorr analysis --decisions-file data/decisions.jsonl
-  vektorr stage --advance
-  vektorr experiments --create "higher_ev" --changes '{"EV_MIN": 0.07}'
+  doomsignal status --stage paper
+  doomsignal graduation --bets 500 --wins 280 --pnl 150 --staked 5000
+  doomsignal analysis --decisions-file data/decisions.jsonl
+  doomsignal stage --advance
+  doomsignal experiments --create "higher_ev" --changes '{"EV_MIN": 0.07}'
         """,
     )
 

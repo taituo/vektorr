@@ -1,10 +1,10 @@
-# Vektorr
+# Doomsignal
 
 A deterministic, latency-sensitive decision engine for live sports markets. The system prioritizes capital preservation through strict gating and noise rejection.
 
 ## System Design
 
-Vektorr operates on a **fail-closed** principle. If data quality, latency, or market conditions do not meet defined thresholds, the system defaults to **NO BET**.
+Doomsignal operates on a **fail-closed** principle. If data quality, latency, or market conditions do not meet defined thresholds, the system defaults to **NO BET**.
 
 ### Core Constraints
 - **Determinism:** The decision pipeline is stateless and reproducible. `f(events, odds)` must yield the exact same result in live and replay modes.

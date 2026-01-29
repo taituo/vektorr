@@ -1,7 +1,7 @@
 """
 Calibration metrics for model validation.
 
-Phase 0 - Validointi: Todista että logiikka tuottaa mitattavaa edgeä.
+Phase 0 - Validointi: Todista että Doomsignal-logiikka tuottaa mitattavaa edgeä.
 
 Metrics:
 - Brier Score: Calibration accuracy (lower = better, 0 = perfect)

@@ -1,5 +1,5 @@
 """
-Vektorr Orchestrator
+Doomsignal Orchestrator
 
 Main entry point that ties all components together:
 - Brain (decision engine with Phase 2 models)
@@ -486,7 +486,7 @@ def setup_logging(level: str = "INFO") -> None:
 
 
 def main():
-    parser = argparse.ArgumentParser(description="Vektorr Orchestrator")
+    parser = argparse.ArgumentParser(description="Doomsignal Orchestrator")
     parser.add_argument("--stage", default="paper", choices=["paper", "shadow", "micro", "small", "target"])
     parser.add_argument("--bankroll", type=float, default=1000.0)
     parser.add_argument("--config", type=str, help="Path to config YAML")
@@ -526,7 +526,7 @@ def main():
 
     # Start
     orchestrator.start()
-    logger.info(f"Vektorr running in {config.stage.value} mode")
+    logger.info(f"Doomsignal running in {config.stage.value} mode")
 
     # Main loop (in production, would receive events)
     try:

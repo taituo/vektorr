@@ -1,11 +1,12 @@
-# WhatIfNotFootball.md
+# Doomsignal: Beyond Football
 
-*Visionäärisiä huomioita ja ideoita Vektorr-moottorin laajentamisesta urheilun ulkopuolelle (2026).*
+*Visionary notes on the evolution of the Doomsignal engine (2026).*
 
 ---
 
-## 1. Ydinkonsepti: "The Event Engine"
-Vektorr ei ole vedonlyöntibotti. Se on **tapahtumien hinnoittelumoottori**. Jos voimme muuttaa uutisen, ilmeen tai huhun dataksi (Event), voimme hinnoitella sen markkinalla.
+## 1. Core Concept: "Agentized Doomsignaling"
+Doomsignal is not a betting bot. It is an **anomaly detection and tail-risk pricing engine**. It systematizes the detection of conditions where systems (markets, matches, news cycles) are about to break or flip.
+
 
 ---
 

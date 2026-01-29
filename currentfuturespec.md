@@ -51,7 +51,7 @@ Brain (Python):
 
 Execution:
 - Dry‑run executor + Betfair stub.
-- Market mapping via market_map (QuestDB).
+- Mapping via market_map (QuestDB).
 
 QuestDB:
 - Time‑series store for events/odds/decisions/executions + mapping tables.

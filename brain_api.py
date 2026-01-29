@@ -16,7 +16,7 @@ from schemas import Event, Odds, MatchState
 logging.basicConfig(level=logging.INFO, format='%(asctime)s - %(levelname)s - %(message)s')
 logger = logging.getLogger("brain_api")
 
-app = FastAPI(title="Vektorr Brain API")
+app = FastAPI(title="Doomsignal Brain API")
 
 # Global state
 try:
