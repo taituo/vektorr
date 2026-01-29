@@ -105,7 +105,7 @@ async def post_event(event: Event):
             can_bet = False
             reason = "MATCH_LIMIT"
         else:
-            can_bet, reason = engine.evaluate_gates(state, odds, recent)
+            can_bet, reason, p_model, ev = engine.evaluate_gates(state, odds, recent)
             
             if can_bet:
                 exec_res = executor.execute(odds.price)
@@ -180,7 +180,7 @@ async def post_odds(odds: Odds):
         can_bet = False
         reason = "MATCH_LIMIT"
     else:
-        can_bet, reason = engine.evaluate_gates(state, odds, recent)
+        can_bet, reason, p_model, ev = engine.evaluate_gates(state, odds, recent)
         if can_bet:
             exec_res = executor.execute(odds.price)
             exec_status = exec_res.reason

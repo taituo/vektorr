@@ -13,6 +13,17 @@ from schemas import Event, Odds, MatchState
 from execution_adapter import ExecutionRequest, ManualExecutionAdapter
 from decisions_tracker import DecisionsTracker
 
+# Phase 6: Metrics
+try:
+    from brain.metrics import (
+        get_metrics_text, events_received, odds_received, decisions_made,
+        event_latency, data_latency, gate_rejections, active_matches,
+        kill_switch_active, bankroll_current, errors_total
+    )
+    METRICS_AVAILABLE = True
+except ImportError:
+    METRICS_AVAILABLE = False
+
 # Phase 4: Safety systems
 try:
     from execution import KillSwitch, MetricsTracker, MetricsSnapshot, calculate_kelly_stake

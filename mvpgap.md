@@ -1,109 +1,109 @@
-# MVP Gap Analysis: mvp.md vs. toteutunut koodi
+# MVP Gap Analysis: mvp.md vs. Actual Code
 
-## Yhteenveto
+## Summary
 
-mvp.md lupasi 4 viikon suunnitelman. Toteutus kattaa noin 60 % luvatuista ominaisuuksista. Alla jokainen puute ja sen vakavuus.
+mvp.md promised a 4-week plan. Implementation covers about 60% of promised features. Below are each gap and its severity.
 
 ---
 
-## Toteuttamatta jääneet ominaisuudet
+## Features Not Implemented
 
-### 1. Tietokanta (SQLite/Postgres)
-- **mvp.md:** "SQLite / Postgres, append-only logit"
-- **Toteutus:** JSONL-tiedostot (`events_log.jsonl`, `odds_log.jsonl`, `decisions.jsonl`)
-- **Vakavuus:** KORKEA — ei ACID-yhteensopivuutta, ei kyselymahdollisuutta, ei atomista backupia
+### 1. Database (SQLite/Postgres)
+- **mvp.md:** "SQLite / Postgres, append-only logs"
+- **Implementation:** JSONL files (`events_log.jsonl`, `odds_log.jsonl`, `decisions.jsonl`)
+- **Severity:** HIGH — no ACID compliance, no query capability, no atomic backup
 
 ### 2. Rolling windows (1min, 5min, 10min)
 - **mvp.md:** "1 min delta, 5 min mean, 10 min mean"
-- **Toteutus:** Vain 10min xG-lookback (O(N) per tick)
-- **Vakavuus:** KESKITASO — trendi- ja deltaominaisuudet puuttuvat kokonaan
+- **Implementation:** Only 10min xG lookback (O(N) per tick)
+- **Severity:** MEDIUM — trend and delta features completely missing
 
-### 3. Lisäfeaturet (possession_5m, box_shots_10m)
+### 3. Extra Features (possession_5m, box_shots_10m)
 - **mvp.md:** "live_xG_10m, box_shots_10m, dangerous_attacks_10m, possession_5m, cards/red, score + minute"
-- **Toteutus:** Vain xG ja danger_attack -määrä TPS:ssä. box_shots ja possession puuttuvat.
-- **Vakavuus:** KESKITASO — TPS-heuristiikka on köyhempi kuin suunniteltu
+- **Implementation:** Only xG and danger_attack count in TPS. box_shots and possession missing.
+- **Severity:** MEDIUM — TPS heuristic is poorer than planned
 
 ### 4. Dashboard
 - **mvp.md:** "Live match panel: minute/score, event latency p95, TPS_label, xG_10m, last decision + reason_code"
-- **Toteutus:** Ei dashboardia. Vain konsolituloste.
-- **Vakavuus:** MATALA — ei vaikuta logiikkaan, mutta vaikeuttaa seurantaa
+- **Implementation:** No dashboard. Console output only.
+- **Severity:** LOW — does not affect logic, but complicates monitoring
 
-### 5. Modulaarinen hakemistorakenne
+### 5. Modular Directory Structure
 - **mvp.md:** "ingest/, state/, features/, decision/, execution_stub/, replay/, logging/, dashboard/"
-- **Toteutus:** Flat-rakenne, kaikki .py-tiedostot juurihakemistossa
-- **Vakavuus:** MATALA — toimii MVP:ssä, mutta skaalautuu huonosti
+- **Implementation:** Flat structure, all .py files in root
+- **Severity:** LOW — works for MVP, but scales poorly
 
-### 6. Erillinen decision.py
-- **mvp.md:** "Luo `decision.py`, jossa on Gate-logiikka"
-- **Toteutus:** Päätöslogiikka on `engine.py`:ssä (`evaluate_gates`)
-- **Vakavuus:** MATALA — toiminnallisesti sama, vain nimeämisero
+### 6. Separate decision.py
+- **mvp.md:** "Create `decision.py` containing Gate logic"
+- **Implementation:** Decision logic is in `engine.py` (`evaluate_gates`)
+- **Severity:** LOW — functionally same, only naming difference
 
-### 7. Trendi (nousee/laskee)
-- **mvp.md:** "trendi (nousee / laskee)" TPS-outputissa
-- **Toteutus:** Ei rolling-deltoja, ei trendilaskentaa
-- **Vakavuus:** KESKITASO — ei näe paineen suuntaa, vain nykyarvon
+### 7. Trend (Rising/Falling)
+- **mvp.md:** "trend (rising / falling)" in TPS output
+- **Implementation:** No rolling deltas, no trend calculation
+- **Severity:** MEDIUM — cannot see pressure direction, only current value
 
-### 8. Market Suspension -gate puuttuu itsenäisenä
-- **mvp.md:** "Market Suspended == True → NO BET" erillisenä hard gatena
-- **Toteutus:** Tarkistetaan `engine.evaluate_gates`:ssa, mutta `MockProvider` ei generoi suspensiotilanteita realistisesti
-- **Vakavuus:** MATALA — gate on koodissa, mutta testaamaton
+### 8. Market Suspension - Gate Missing as Independent
+- **mvp.md:** "Market Suspended == True → NO BET" as a separate hard gate
+- **Implementation:** Checked in `engine.evaluate_gates`, but `MockProvider` does not generate suspension situations realistically
+- **Severity:** LOW — gate is in code, but untested
 
-### 9. Slippage penalty backtestissä
-- **mvp.md:** "Vähennä jokaisesta kertoimesta automaattisesti 0.05"
-- **Toteutus:** `ExecutionStub` käyttää `random.uniform` -pohjaista slippagea, ei kiinteää 0.05-penaltia
-- **Vakavuus:** MATALA — toteutus on itse asiassa realistisempi kuin suunnitelma
+### 9. Slippage Penalty in Backtest
+- **mvp.md:** "Automatically deduct 0.05 from every odd"
+- **Implementation:** `ExecutionStub` uses `random.uniform` based slippage, not fixed 0.05 penalty
+- **Severity:** LOW — implementation is actually more realistic than plan
 
-### 10. Oikea Data-adapteri
-- **mvp.md:** "Ingest adapteri valitsemallesi data-API:lle"
-- **Toteutus:** Vain `MockProvider`, joka generoi satunnaista dataa. Oikeaa API-yhteyttä ei ole.
-- **Vakavuus:** KRIITTINEN — Järjestelmä on täysin hyödytön ilman oikeaa dataa.
+### 10. Real Data Adapter
+- **mvp.md:** "Ingest adapter for your chosen data API"
+- **Implementation:** Only `MockProvider` generating random data. No real API connection.
+- **Severity:** CRITICAL — System is completely useless without real data.
 
-### 11. Arkkitehtuuri (Blocking vs. Non-blocking)
-- **mvp.md:** "Yksi Python-prosessi per rooli" (Ingest, Decision, jne.)
-- **Toteutus:** Yksi monoliittinen `main.py` looppi, joka blokkaa `time.sleep(0.5)` -kutsulla.
-- **Vakavuus:** KORKEA — Ei skaalaudu useaan otteluun, estää roolien eriytymisen.
+### 11. Architecture (Blocking vs. Non-blocking)
+- **mvp.md:** "One Python process per role" (Ingest, Decision, etc.)
+- **Implementation:** One monolithic `main.py` loop that blocks with `time.sleep(0.5)` call.
+- **Severity:** HIGH — Does not scale to multiple matches, prevents role separation.
 
-### 12. Replay-determinismi
-- **mvp.md:** "Replay toimii samalla päätöskoodilla kuin live" (implisiittisesti deterministinen)
-- **Toteutus:** `ExecutionStub` käyttää `random.random()` -funktiota, mikä tekee replaysta ei-deterministisen.
-- **Vakavuus:** KESKITASO — Vaikeuttaa regressiotestausta ja optimointia.
+### 12. Replay Determinism
+- **mvp.md:** "Replay works with the same decision code as live" (implicitly deterministic)
+- **Implementation:** `ExecutionStub` uses `random.random()` function, making replay non-deterministic.
+- **Severity:** MEDIUM — Complicates regression testing and optimization.
 
 ---
 
-## Toteutetut ominaisuudet ✓
+## Implemented Features ✓
 
-| Ominaisuus | Tila |
+| Feature | Status |
 |---|---|
-| Event + odds ingest | ⚠️ (Vain Mock, ei Real) |
-| Latency-mittaus (p95) | ✓ |
-| TPS-laskenta (LOW/MID/PRESS/CHAOS) | ✓ |
-| Gate-logiikka (latency, quality, EV, limits) | ✓ |
-| Poisson EV-malli | ✓ |
+| Event + odds ingest | ⚠️ (Mock Only, no Real) |
+| Latency measurement (p95) | ✓ |
+| TPS calculation (LOW/MID/PRESS/CHAOS) | ✓ |
+| Gate logic (latency, quality, EV, limits) | ✓ |
+| Poisson EV model | ✓ |
 | Execution stub (fill/reject/slippage) | ✓ |
 | Paper wallet + settlement | ✓ |
 | Audit log (decisions.jsonl) | ✓ |
 | Replay (replay.py) | ✓ |
 | Reason codes | ✓ |
-| config.yaml kynnysarvot | ✓ |
-| Pydantic-skeemit | ✓ |
+| config.yaml thresholds | ✓ |
+| Pydantic schemas | ✓ |
 
 ---
 
-## Prioriteettijärjestys korjauksille
+## Priority Order for Fixes
 
-1. **SQLite-migraatio** — JSONL → SQLite. Mahdollistaa kyselyt ja atomisen talletuksen.
-2. **Rolling windows** — 1min/5min/10min ikkunat inkrementaalisella laskennalla (O(1) per tick).
-3. **Lisäfeaturet TPS:ään** — box_shots, possession mukaan.
-4. **Trendi** — delta edelliseen ikkunaan.
-5. **Dashboard** — Streamlit-minimi.
-6. **Hakemistorakenne** — refaktoroi moduuleihin.
+1. **SQLite Migration** — JSONL → SQLite. Enables queries and atomic storage.
+2. **Rolling windows** — 1min/5min/10min windows with incremental calculation (O(1) per tick).
+3. **Extra features to TPS** — include box_shots, possession.
+4. **Trend** — delta to previous window.
+5. **Dashboard** — Streamlit minimum.
+6. **Directory Structure** — refactor into modules.
 
 ---
 
-# Addendum (2026-01-27): Täsmennykset / muutokset
+# Addendum (2026-01-27): Clarifications / Changes
 
-## Muutokset havaintoihin
-1. **Market Suspension -gate**: Gate on toteutettu ja `MockProvider` asettaa `is_suspended` satunnaisesti (~5%). Kyse ei ole puuttuvasta gatesta vaan *realismista ja testikattavuudesta*. Vakavuus pysyy matalana, mutta luokitus “puuttuu” on liian vahva.
-2. **Score ei päivity**: `score` on kovakoodattu `"0-0"` eikä muutu, vaikka mvp.md lupaa “score + minute”. Tämä on puute, joka vaikuttaa analyysiin ja mahdollisiin malleihin.
-3. **Replay ei ole luotettava**: Replay on olemassa, mutta tapahtumaikkunointi ja oddsien aikakohdistus ovat epävakaita (järjestys/ajastus). Siksi “Replay ✓” on vain osittain tosi.
-4. **Execution receipts vs. outcome**: Päätösloki kyllä tallentaa executionin, mutta *settlement on satunnainen* eikä seuraa eventtejä. Tämä tekee audit-arvosta heikomman kuin MVP-spesin henki.
+## Changes to Observations
+1. **Market Suspension - Gate**: Gate is implemented and `MockProvider` sets `is_suspended` randomly (~5%). Not a missing gate but *realism and test coverage*. Severity remains low, but classification "missing" is too strong.
+2. **Score Not Updating**: `score` is hardcoded `"0-0"` and does not change, even though mvp.md promises "score + minute". This is a gap affecting analysis and potential models.
+3. **Replay Not Reliable**: Replay exists, but event windowing and odds timing alignment are unstable (order/timing). Therefore "Replay ✓" is only partially true.
+4. **Execution Receipts vs. Outcome**: Decision log does record execution, but *settlement is random* and does not follow events. This makes audit value weaker than MVP spec spirit.

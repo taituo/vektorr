@@ -19,6 +19,8 @@ from http.server import HTTPServer, BaseHTTPRequestHandler
 from urllib.parse import urlparse, parse_qs
 import json
 
+from tb_generators import EventGenerator, OddsGenerator
+
 # ---------- EPL teams from mappings.yaml ----------
 EPL_TEAMS = [
     "Arsenal", "Aston Villa", "Bournemouth", "Brentford",
@@ -32,7 +34,7 @@ EPL_TEAMS = [
 class MatchSim:
     """Simulates a single live football match."""
 
-    def __init__(self, match_id: str, home: str, away: str):
+    def __init__(self, match_id: str, home: str, away: str, *, rng: random.Random, tempo: str, chaos: float):
         self.match_id = match_id
         self.home = home
         self.away = away
@@ -43,17 +45,22 @@ class MatchSim:
         self.half_time = False
         self.red_card_team: str | None = None
 
+        self._rng = rng
+        self.event_gen = EventGenerator(home, away, rng=self._rng, tempo=tempo, chaos=chaos)
+        self.odds_gen = OddsGenerator(
+            rng=self._rng,
+            base_price_over={1.5: 1.35, 2.5: 2.10, 3.5: 3.80},
+            suspend_seconds=30,
+            random_suspend_prob=0.05,
+        )
+
         # buffers
         self.events: list[dict] = []
         self.odds: list[dict] = []
 
-        # odds state
-        self._base_price_over = {1.5: 1.35, 2.5: 2.10, 3.5: 3.80}
-        self._suspended_until: datetime | None = None
-
         # injury time
-        self._injury_time_1h = random.randint(1, 4)
-        self._injury_time_2h = random.randint(1, 5)
+        self._injury_time_1h = self._rng.randint(1, 4)
+        self._injury_time_2h = self._rng.randint(1, 5)
         self._end_minute = 90 + self._injury_time_2h
 
     def total_goals(self) -> int:
@@ -94,46 +101,28 @@ class MatchSim:
     # ---- event generation ----
 
     def _maybe_event(self, now: datetime):
-        r = random.random()
-        team = random.choice([self.home, self.away])
+        specs = self.event_gen.generate(self.events)
+        for spec in specs:
+            if spec.etype == "GOAL":
+                self._add_goal(now, spec.team, spec.xg)
+            else:
+                self._add_event(now, spec.etype, spec.team, spec.xg)
+                if spec.etype == "RED_CARD":
+                    self.red_card_team = spec.team
 
-        # Higher goal chance during PRESS (after danger attacks)
-        goal_prob = 0.02
-        recent_dangers = sum(
-            1 for e in self.events[-20:]
-            if e["type"] in ("DANGER_ATTACK", "SHOT")
-        )
-        if recent_dangers >= 3:
-            goal_prob = 0.05  # PRESS → higher goal rate
-
-        if r < goal_prob:
-            self._add_goal(now, team)
-        elif r < goal_prob + 0.05:
-            self._add_event(now, "CORNER", team, 0.0)
-        elif r < goal_prob + 0.12:
-            self._add_event(now, "DANGER_ATTACK", team, 0.0)
-        elif r < goal_prob + 0.20:
-            xg = round(random.uniform(0.05, 0.35), 3)
-            self._add_event(now, "SHOT", team, xg)
-        elif r < goal_prob + 0.22:
-            # Card: 20% chance red
-            is_red = random.random() < 0.20
-            card_type = "RED_CARD" if is_red else "CARD"
-            self._add_event(now, card_type, team, 0.0)
-            if is_red:
-                self.red_card_team = team
-
-    def _add_goal(self, now: datetime, team: str):
+    def _add_goal(self, now: datetime, team: str, xg: float | None = None):
         if team == self.home:
             self.score_home += 1
         else:
             self.score_away += 1
-        self._add_event(now, "GOAL", team, round(random.uniform(0.10, 0.35), 3))
+        if xg is None:
+            xg = round(self._rng.uniform(0.10, 0.35), 3)
+        self._add_event(now, "GOAL", team, xg)
         # Post-goal suspension: 30s
-        self._suspended_until = now + timedelta(seconds=30)
+        self.odds_gen.on_goal(now)
 
     def _add_event(self, now: datetime, etype: str, team: str | None, xg: float, extra: str | None = None):
-        latency = random.uniform(0.3, 3.0)
+        latency = self._rng.uniform(0.3, 3.0)
         ev = {
             "match_id": self.match_id,
             "t_event": now.isoformat(),
@@ -147,72 +136,34 @@ class MatchSim:
     # ---- odds generation ----
 
     def _emit_odds(self, now: datetime):
-        is_susp = self._suspended_until is not None and now < self._suspended_until
-        if not is_susp:
-            is_susp = random.random() < 0.05
-
-        total = self.total_goals()
-        remaining_frac = max(0.0, (90 - self.minute) / 90.0)
-
-        for point in (1.5, 2.5, 3.5):
-            base = self._base_price_over[point]
-            goals_needed = point - total
-
-            if goals_needed <= 0:
-                # Already over the line
-                price_over = max(1.01, round(1.01 + remaining_frac * 0.15 + random.uniform(-0.02, 0.02), 2))
-            else:
-                # Shift by goals scored and time remaining
-                time_decay = (1 - remaining_frac) * 0.6
-                goal_shift = (total - point) * -0.40
-                price_over = max(1.01, round(base + goal_shift + time_decay + random.uniform(-0.05, 0.05), 2))
-
-            # Under price: implied from over (with margin)
-            margin = 1.05
-            implied_over = 1.0 / price_over
-            implied_under = max(0.02, margin - implied_over)
-            price_under = max(1.01, round(1.0 / implied_under, 2))
-
-            # Post-goal shock: sharper price movement for 10 ticks after goal
-            if self._suspended_until is not None:
-                secs_since_goal = (now - (self._suspended_until - timedelta(seconds=30))).total_seconds()
-                if 0 < secs_since_goal < 20:
-                    shock = random.uniform(0.05, 0.20)
-                    price_over = max(1.01, round(price_over - shock, 2))
-                    price_under = max(1.01, round(price_under + shock * 0.5, 2))
-
-            latency = random.uniform(0.3, 2.0)
-            t_recv = (now + timedelta(seconds=latency)).isoformat()
-
-            for sel, price in [("OVER", price_over), ("UNDER", price_under)]:
-                self.odds.append({
-                    "match_id": self.match_id,
-                    "t_seen": now.isoformat(),
-                    "t_recv": t_recv,
-                    "market": f"OU_{point}",
-                    "selection": sel,
-                    "price": price,
-                    "line": point,
-                    "point": point,
-                    "is_suspended": is_susp,
-                })
+        self.odds.extend(
+            self.odds_gen.generate(
+                now=now,
+                minute=self.minute,
+                total_goals=self.total_goals(),
+                points=(1.5, 2.5, 3.5),
+                match_id=self.match_id,
+            )
+        )
 
 
 class SimulationEngine:
     """Runs multiple match simulations in a background thread."""
 
-    def __init__(self, num_matches: int, speed: float):
+    def __init__(self, num_matches: int, speed: float, *, seed: int | None, tempo: str, chaos: float):
         self.speed = speed
         self.lock = threading.Lock()
         self.matches: list[MatchSim] = []
 
+        rng = random.Random(seed)
         teams = list(EPL_TEAMS)
-        random.shuffle(teams)
+        rng.shuffle(teams)
         for i in range(num_matches):
             home = teams[i * 2]
             away = teams[i * 2 + 1]
             mid = f"mock-{uuid.uuid4().hex[:8]}"
-            self.matches.append(MatchSim(mid, home, away))
+            mrng = random.Random(rng.random())
+            self.matches.append(MatchSim(mid, home, away, rng=mrng, tempo=tempo, chaos=chaos))
 
         self._thread = threading.Thread(target=self._run, daemon=True)
         self._thread.start()
@@ -302,12 +253,21 @@ def main():
     parser.add_argument("--port", type=int, default=9999)
     parser.add_argument("--matches", type=int, default=3)
     parser.add_argument("--speed", type=float, default=2.0, help="Seconds per match minute")
+    parser.add_argument("--tempo", choices=["low", "normal", "high"], default="normal")
+    parser.add_argument("--chaos", type=float, default=0.0)
+    parser.add_argument("--seed", type=int, default=None)
     args = parser.parse_args()
 
     assert args.matches * 2 <= len(EPL_TEAMS), f"Not enough teams for {args.matches} matches"
 
     global engine
-    engine = SimulationEngine(args.matches, args.speed)
+    engine = SimulationEngine(
+        args.matches,
+        args.speed,
+        seed=args.seed,
+        tempo=args.tempo,
+        chaos=args.chaos,
+    )
 
     print(f"Mock server on :{args.port}  ({args.matches} matches, {args.speed}s/min)")
     for m in engine.matches:

@@ -1,0 +1,580 @@
+{
+  "55614950": {
+    "id": "55614950",
+    "action_type": "system_unfreeze",
+    "description": "System frozen: Manual freeze: test",
+    "details": {
+      "trigger": "manual",
+      "timestamp": "2026-01-28T20:28:08.610041",
+      "value": 0,
+      "threshold": 0,
+      "message": "Manual freeze: test"
+    },
+    "status": "pending",
+    "created_at": "2026-01-28T20:28:08.610147",
+    "expires_at": "2026-01-29T20:28:08.610149",
+    "responded_at": null,
+    "responder": null
+  },
+  "0f6909d7": {
+    "id": "0f6909d7",
+    "action_type": "system_unfreeze",
+    "description": "System frozen: Daily loss -33.3% exceeds limit -2.0%",
+    "details": {
+      "trigger": "daily_loss",
+      "timestamp": "2026-01-28T20:28:08.726741",
+      "value": -0.3333333333333333,
+      "threshold": -0.02,
+      "message": "Daily loss -33.3% exceeds limit -2.0%"
+    },
+    "status": "pending",
+    "created_at": "2026-01-28T20:28:08.726842",
+    "expires_at": "2026-01-29T20:28:08.726844",
+    "responded_at": null,
+    "responder": null
+  },
+  "9e698a1a": {
+    "id": "9e698a1a",
+    "action_type": "system_unfreeze",
+    "description": "System frozen: Manual freeze: test",
+    "details": {
+      "trigger": "manual",
+      "timestamp": "2026-01-28T20:28:13.486186",
+      "value": 0,
+      "threshold": 0,
+      "message": "Manual freeze: test"
+    },
+    "status": "pending",
+    "created_at": "2026-01-28T20:28:13.486286",
+    "expires_at": "2026-01-29T20:28:13.486286",
+    "responded_at": null,
+    "responder": null
+  },
+  "e48cd3b5": {
+    "id": "e48cd3b5",
+    "action_type": "system_unfreeze",
+    "description": "System frozen: Daily loss -33.3% exceeds limit -2.0%",
+    "details": {
+      "trigger": "daily_loss",
+      "timestamp": "2026-01-28T20:28:13.599876",
+      "value": -0.3333333333333333,
+      "threshold": -0.02,
+      "message": "Daily loss -33.3% exceeds limit -2.0%"
+    },
+    "status": "pending",
+    "created_at": "2026-01-28T20:28:13.599975",
+    "expires_at": "2026-01-29T20:28:13.599975",
+    "responded_at": null,
+    "responder": null
+  },
+  "e8fe9f6e": {
+    "id": "e8fe9f6e",
+    "action_type": "system_unfreeze",
+    "description": "System frozen: Manual freeze: test",
+    "details": {
+      "trigger": "manual",
+      "timestamp": "2026-01-29T04:22:26.069677",
+      "value": 0,
+      "threshold": 0,
+      "message": "Manual freeze: test"
+    },
+    "status": "pending",
+    "created_at": "2026-01-29T04:22:26.069786",
+    "expires_at": "2026-01-30T04:22:26.069786",
+    "responded_at": null,
+    "responder": null
+  },
+  "7ee0fd98": {
+    "id": "7ee0fd98",
+    "action_type": "system_unfreeze",
+    "description": "System frozen: Daily loss -33.3% exceeds limit -2.0%",
+    "details": {
+      "trigger": "daily_loss",
+      "timestamp": "2026-01-29T04:22:26.179792",
+      "value": -0.3333333333333333,
+      "threshold": -0.02,
+      "message": "Daily loss -33.3% exceeds limit -2.0%"
+    },
+    "status": "pending",
+    "created_at": "2026-01-29T04:22:26.179934",
+    "expires_at": "2026-01-30T04:22:26.179936",
+    "responded_at": null,
+    "responder": null
+  },
+  "2d49736d": {
+    "id": "2d49736d",
+    "action_type": "system_unfreeze",
+    "description": "System frozen: Manual freeze: test",
+    "details": {
+      "trigger": "manual",
+      "timestamp": "2026-01-29T05:50:07.973150",
+      "value": 0,
+      "threshold": 0,
+      "message": "Manual freeze: test"
+    },
+    "status": "pending",
+    "created_at": "2026-01-29T05:50:07.973251",
+    "expires_at": "2026-01-30T05:50:07.973252",
+    "responded_at": null,
+    "responder": null
+  },
+  "cb72ecfa": {
+    "id": "cb72ecfa",
+    "action_type": "system_unfreeze",
+    "description": "System frozen: Daily loss -33.3% exceeds limit -2.0%",
+    "details": {
+      "trigger": "daily_loss",
+      "timestamp": "2026-01-29T05:50:08.082864",
+      "value": -0.3333333333333333,
+      "threshold": -0.02,
+      "message": "Daily loss -33.3% exceeds limit -2.0%"
+    },
+    "status": "pending",
+    "created_at": "2026-01-29T05:50:08.082969",
+    "expires_at": "2026-01-30T05:50:08.082970",
+    "responded_at": null,
+    "responder": null
+  },
+  "a20ae540": {
+    "id": "a20ae540",
+    "action_type": "system_unfreeze",
+    "description": "System frozen: Manual freeze: test",
+    "details": {
+      "trigger": "manual",
+      "timestamp": "2026-01-29T06:54:35.350763",
+      "value": 0,
+      "threshold": 0,
+      "message": "Manual freeze: test"
+    },
+    "status": "pending",
+    "created_at": "2026-01-29T06:54:35.350867",
+    "expires_at": "2026-01-30T06:54:35.350868",
+    "responded_at": null,
+    "responder": null
+  },
+  "799b488c": {
+    "id": "799b488c",
+    "action_type": "system_unfreeze",
+    "description": "System frozen: Daily loss -33.3% exceeds limit -2.0%",
+    "details": {
+      "trigger": "daily_loss",
+      "timestamp": "2026-01-29T06:54:35.466922",
+      "value": -0.3333333333333333,
+      "threshold": -0.02,
+      "message": "Daily loss -33.3% exceeds limit -2.0%"
+    },
+    "status": "pending",
+    "created_at": "2026-01-29T06:54:35.467019",
+    "expires_at": "2026-01-30T06:54:35.467020",
+    "responded_at": null,
+    "responder": null
+  },
+  "fb7cf4c4": {
+    "id": "fb7cf4c4",
+    "action_type": "system_unfreeze",
+    "description": "System frozen: Manual freeze: test",
+    "details": {
+      "trigger": "manual",
+      "timestamp": "2026-01-29T06:57:45.597765",
+      "value": 0,
+      "threshold": 0,
+      "message": "Manual freeze: test"
+    },
+    "status": "pending",
+    "created_at": "2026-01-29T06:57:45.597862",
+    "expires_at": "2026-01-30T06:57:45.597863",
+    "responded_at": null,
+    "responder": null
+  },
+  "6e0dba2f": {
+    "id": "6e0dba2f",
+    "action_type": "system_unfreeze",
+    "description": "System frozen: Daily loss -33.3% exceeds limit -2.0%",
+    "details": {
+      "trigger": "daily_loss",
+      "timestamp": "2026-01-29T06:57:45.708151",
+      "value": -0.3333333333333333,
+      "threshold": -0.02,
+      "message": "Daily loss -33.3% exceeds limit -2.0%"
+    },
+    "status": "pending",
+    "created_at": "2026-01-29T06:57:45.708309",
+    "expires_at": "2026-01-30T06:57:45.708311",
+    "responded_at": null,
+    "responder": null
+  },
+  "c75c306e": {
+    "id": "c75c306e",
+    "action_type": "system_unfreeze",
+    "description": "System frozen: Manual freeze: test",
+    "details": {
+      "trigger": "manual",
+      "timestamp": "2026-01-29T07:01:41.469680",
+      "value": 0,
+      "threshold": 0,
+      "message": "Manual freeze: test"
+    },
+    "status": "pending",
+    "created_at": "2026-01-29T07:01:41.469854",
+    "expires_at": "2026-01-30T07:01:41.469855",
+    "responded_at": null,
+    "responder": null
+  },
+  "4b7af304": {
+    "id": "4b7af304",
+    "action_type": "system_unfreeze",
+    "description": "System frozen: Daily loss -33.3% exceeds limit -2.0%",
+    "details": {
+      "trigger": "daily_loss",
+      "timestamp": "2026-01-29T07:01:41.579103",
+      "value": -0.3333333333333333,
+      "threshold": -0.02,
+      "message": "Daily loss -33.3% exceeds limit -2.0%"
+    },
+    "status": "pending",
+    "created_at": "2026-01-29T07:01:41.579209",
+    "expires_at": "2026-01-30T07:01:41.579210",
+    "responded_at": null,
+    "responder": null
+  },
+  "d88314d6": {
+    "id": "d88314d6",
+    "action_type": "system_unfreeze",
+    "description": "System frozen: Manual freeze: test",
+    "details": {
+      "trigger": "manual",
+      "timestamp": "2026-01-29T07:03:08.661408",
+      "value": 0,
+      "threshold": 0,
+      "message": "Manual freeze: test"
+    },
+    "status": "pending",
+    "created_at": "2026-01-29T07:03:08.661508",
+    "expires_at": "2026-01-30T07:03:08.661509",
+    "responded_at": null,
+    "responder": null
+  },
+  "7eff3e3a": {
+    "id": "7eff3e3a",
+    "action_type": "system_unfreeze",
+    "description": "System frozen: Daily loss -33.3% exceeds limit -2.0%",
+    "details": {
+      "trigger": "daily_loss",
+      "timestamp": "2026-01-29T07:03:08.770075",
+      "value": -0.3333333333333333,
+      "threshold": -0.02,
+      "message": "Daily loss -33.3% exceeds limit -2.0%"
+    },
+    "status": "pending",
+    "created_at": "2026-01-29T07:03:08.770182",
+    "expires_at": "2026-01-30T07:03:08.770183",
+    "responded_at": null,
+    "responder": null
+  },
+  "a5ab3312": {
+    "id": "a5ab3312",
+    "action_type": "system_unfreeze",
+    "description": "System frozen: Manual freeze: test",
+    "details": {
+      "trigger": "manual",
+      "timestamp": "2026-01-29T07:04:23.944360",
+      "value": 0,
+      "threshold": 0,
+      "message": "Manual freeze: test"
+    },
+    "status": "pending",
+    "created_at": "2026-01-29T07:04:23.944464",
+    "expires_at": "2026-01-30T07:04:23.944465",
+    "responded_at": null,
+    "responder": null
+  },
+  "de43ade1": {
+    "id": "de43ade1",
+    "action_type": "system_unfreeze",
+    "description": "System frozen: Daily loss -33.3% exceeds limit -2.0%",
+    "details": {
+      "trigger": "daily_loss",
+      "timestamp": "2026-01-29T07:04:24.058907",
+      "value": -0.3333333333333333,
+      "threshold": -0.02,
+      "message": "Daily loss -33.3% exceeds limit -2.0%"
+    },
+    "status": "pending",
+    "created_at": "2026-01-29T07:04:24.059002",
+    "expires_at": "2026-01-30T07:04:24.059002",
+    "responded_at": null,
+    "responder": null
+  },
+  "5a8bf369": {
+    "id": "5a8bf369",
+    "action_type": "system_unfreeze",
+    "description": "System frozen: Manual freeze: test",
+    "details": {
+      "trigger": "manual",
+      "timestamp": "2026-01-29T18:35:10.117095",
+      "value": 0,
+      "threshold": 0,
+      "message": "Manual freeze: test"
+    },
+    "status": "pending",
+    "created_at": "2026-01-29T18:35:10.117202",
+    "expires_at": "2026-01-30T18:35:10.117203",
+    "responded_at": null,
+    "responder": null
+  },
+  "25ef67ea": {
+    "id": "25ef67ea",
+    "action_type": "system_unfreeze",
+    "description": "System frozen: Daily loss -33.3% exceeds limit -2.0%",
+    "details": {
+      "trigger": "daily_loss",
+      "timestamp": "2026-01-29T18:35:10.228584",
+      "value": -0.3333333333333333,
+      "threshold": -0.02,
+      "message": "Daily loss -33.3% exceeds limit -2.0%"
+    },
+    "status": "pending",
+    "created_at": "2026-01-29T18:35:10.228721",
+    "expires_at": "2026-01-30T18:35:10.228722",
+    "responded_at": null,
+    "responder": null
+  },
+  "4690168b": {
+    "id": "4690168b",
+    "action_type": "system_unfreeze",
+    "description": "System frozen: Manual freeze: test",
+    "details": {
+      "trigger": "manual",
+      "timestamp": "2026-01-29T20:26:03.046980",
+      "value": 0,
+      "threshold": 0,
+      "message": "Manual freeze: test"
+    },
+    "status": "pending",
+    "created_at": "2026-01-29T20:26:03.047086",
+    "expires_at": "2026-01-30T20:26:03.047087",
+    "responded_at": null,
+    "responder": null
+  },
+  "f5d4a427": {
+    "id": "f5d4a427",
+    "action_type": "system_unfreeze",
+    "description": "System frozen: Daily loss -33.3% exceeds limit -2.0%",
+    "details": {
+      "trigger": "daily_loss",
+      "timestamp": "2026-01-29T20:26:03.156972",
+      "value": -0.3333333333333333,
+      "threshold": -0.02,
+      "message": "Daily loss -33.3% exceeds limit -2.0%"
+    },
+    "status": "pending",
+    "created_at": "2026-01-29T20:26:03.157088",
+    "expires_at": "2026-01-30T20:26:03.157089",
+    "responded_at": null,
+    "responder": null
+  },
+  "e6b2e520": {
+    "id": "e6b2e520",
+    "action_type": "system_unfreeze",
+    "description": "System frozen: Manual freeze: test",
+    "details": {
+      "trigger": "manual",
+      "timestamp": "2026-01-29T21:24:53.384554",
+      "value": 0,
+      "threshold": 0,
+      "message": "Manual freeze: test"
+    },
+    "status": "pending",
+    "created_at": "2026-01-29T21:24:53.384665",
+    "expires_at": "2026-01-30T21:24:53.384666",
+    "responded_at": null,
+    "responder": null
+  },
+  "56af3701": {
+    "id": "56af3701",
+    "action_type": "system_unfreeze",
+    "description": "System frozen: Daily loss -33.3% exceeds limit -2.0%",
+    "details": {
+      "trigger": "daily_loss",
+      "timestamp": "2026-01-29T21:24:53.494226",
+      "value": -0.3333333333333333,
+      "threshold": -0.02,
+      "message": "Daily loss -33.3% exceeds limit -2.0%"
+    },
+    "status": "pending",
+    "created_at": "2026-01-29T21:24:53.494331",
+    "expires_at": "2026-01-30T21:24:53.494332",
+    "responded_at": null,
+    "responder": null
+  },
+  "d445ac3b": {
+    "id": "d445ac3b",
+    "action_type": "system_unfreeze",
+    "description": "System frozen: Manual freeze: test",
+    "details": {
+      "trigger": "manual",
+      "timestamp": "2026-01-29T21:25:38.508442",
+      "value": 0,
+      "threshold": 0,
+      "message": "Manual freeze: test"
+    },
+    "status": "pending",
+    "created_at": "2026-01-29T21:25:38.508564",
+    "expires_at": "2026-01-30T21:25:38.508565",
+    "responded_at": null,
+    "responder": null
+  },
+  "3c00c9b1": {
+    "id": "3c00c9b1",
+    "action_type": "system_unfreeze",
+    "description": "System frozen: Daily loss -33.3% exceeds limit -2.0%",
+    "details": {
+      "trigger": "daily_loss",
+      "timestamp": "2026-01-29T21:25:38.615392",
+      "value": -0.3333333333333333,
+      "threshold": -0.02,
+      "message": "Daily loss -33.3% exceeds limit -2.0%"
+    },
+    "status": "pending",
+    "created_at": "2026-01-29T21:25:38.615514",
+    "expires_at": "2026-01-30T21:25:38.615515",
+    "responded_at": null,
+    "responder": null
+  },
+  "9af63368": {
+    "id": "9af63368",
+    "action_type": "system_unfreeze",
+    "description": "System frozen: Manual freeze: test",
+    "details": {
+      "trigger": "manual",
+      "timestamp": "2026-01-29T21:29:25.103339",
+      "value": 0,
+      "threshold": 0,
+      "message": "Manual freeze: test"
+    },
+    "status": "pending",
+    "created_at": "2026-01-29T21:29:25.103440",
+    "expires_at": "2026-01-30T21:29:25.103441",
+    "responded_at": null,
+    "responder": null
+  },
+  "7a4752bd": {
+    "id": "7a4752bd",
+    "action_type": "system_unfreeze",
+    "description": "System frozen: Daily loss -33.3% exceeds limit -2.0%",
+    "details": {
+      "trigger": "daily_loss",
+      "timestamp": "2026-01-29T21:29:25.212183",
+      "value": -0.3333333333333333,
+      "threshold": -0.02,
+      "message": "Daily loss -33.3% exceeds limit -2.0%"
+    },
+    "status": "pending",
+    "created_at": "2026-01-29T21:29:25.212297",
+    "expires_at": "2026-01-30T21:29:25.212298",
+    "responded_at": null,
+    "responder": null
+  },
+  "6d5dd306": {
+    "id": "6d5dd306",
+    "action_type": "system_unfreeze",
+    "description": "System frozen: Manual freeze: test",
+    "details": {
+      "trigger": "manual",
+      "timestamp": "2026-01-29T21:30:15.155841",
+      "value": 0,
+      "threshold": 0,
+      "message": "Manual freeze: test"
+    },
+    "status": "pending",
+    "created_at": "2026-01-29T21:30:15.155947",
+    "expires_at": "2026-01-30T21:30:15.155947",
+    "responded_at": null,
+    "responder": null
+  },
+  "148fb94d": {
+    "id": "148fb94d",
+    "action_type": "system_unfreeze",
+    "description": "System frozen: Daily loss -33.3% exceeds limit -2.0%",
+    "details": {
+      "trigger": "daily_loss",
+      "timestamp": "2026-01-29T21:30:15.262104",
+      "value": -0.3333333333333333,
+      "threshold": -0.02,
+      "message": "Daily loss -33.3% exceeds limit -2.0%"
+    },
+    "status": "pending",
+    "created_at": "2026-01-29T21:30:15.262220",
+    "expires_at": "2026-01-30T21:30:15.262222",
+    "responded_at": null,
+    "responder": null
+  },
+  "ab7867ef": {
+    "id": "ab7867ef",
+    "action_type": "system_unfreeze",
+    "description": "System frozen: Manual freeze: test",
+    "details": {
+      "trigger": "manual",
+      "timestamp": "2026-01-29T21:34:58.111494",
+      "value": 0,
+      "threshold": 0,
+      "message": "Manual freeze: test"
+    },
+    "status": "pending",
+    "created_at": "2026-01-29T21:34:58.111618",
+    "expires_at": "2026-01-30T21:34:58.111619",
+    "responded_at": null,
+    "responder": null
+  },
+  "7b975eb4": {
+    "id": "7b975eb4",
+    "action_type": "system_unfreeze",
+    "description": "System frozen: Daily loss -33.3% exceeds limit -2.0%",
+    "details": {
+      "trigger": "daily_loss",
+      "timestamp": "2026-01-29T21:34:58.229182",
+      "value": -0.3333333333333333,
+      "threshold": -0.02,
+      "message": "Daily loss -33.3% exceeds limit -2.0%"
+    },
+    "status": "pending",
+    "created_at": "2026-01-29T21:34:58.229482",
+    "expires_at": "2026-01-30T21:34:58.229485",
+    "responded_at": null,
+    "responder": null
+  },
+  "e10b9bac": {
+    "id": "e10b9bac",
+    "action_type": "system_unfreeze",
+    "description": "System frozen: Manual freeze: test",
+    "details": {
+      "trigger": "manual",
+      "timestamp": "2026-01-29T21:42:21.433370",
+      "value": 0,
+      "threshold": 0,
+      "message": "Manual freeze: test"
+    },
+    "status": "pending",
+    "created_at": "2026-01-29T21:42:21.433482",
+    "expires_at": "2026-01-30T21:42:21.433483",
+    "responded_at": null,
+    "responder": null
+  },
+  "e8085c3b": {
+    "id": "e8085c3b",
+    "action_type": "system_unfreeze",
+    "description": "System frozen: Daily loss -33.3% exceeds limit -2.0%",
+    "details": {
+      "trigger": "daily_loss",
+      "timestamp": "2026-01-29T21:42:21.541632",
+      "value": -0.3333333333333333,
+      "threshold": -0.02,
+      "message": "Daily loss -33.3% exceeds limit -2.0%"
+    },
+    "status": "pending",
+    "created_at": "2026-01-29T21:42:21.541780",
+    "expires_at": "2026-01-30T21:42:21.541781",
+    "responded_at": null,
+    "responder": null
+  }
+}

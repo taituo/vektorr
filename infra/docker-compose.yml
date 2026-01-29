@@ -1,0 +1,16 @@
+version: '3'
+services:
+  questdb:
+    image: questdb/questdb:latest
+    container_name: questdb
+    restart: always
+    ports:
+      - "9000:9000"   # HTTP Console & REST
+      - "9009:9009"   # ILP (Ingest Line Protocol) - Spinen käyttämä
+      - "8812:8812"   # PostgreSQL Wire Protocol
+    environment:
+      - QDB_CAIRO_COMMIT_LAG=1000            # Commit useammin (vähemmän muistia puskurissa)
+      - QDB_CAIRO_MAX_UNCOMMITTED_ROWS=500   # Pienempi puskuri
+      - JAVA_OPTS=-Xms128m -Xmx512m          # Rajoitetaan Java-muisti 512MB:iin
+    volumes:
+      - ./questdb_data:/var/lib/questdb      # Data säilyy tässä kansiossa

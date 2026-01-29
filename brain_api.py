@@ -32,6 +32,9 @@ wallet = PaperWallet(config)
 match_events: Dict[str, List[Event]] = {}
 latest_odds: Dict[str, Odds] = {}
 match_bets_count: Dict[str, int] = {}
+odds_history: Dict[str, List[Odds]] = {}
+last_signal_price: Dict[str, float] = {}
+last_signal_time: Dict[str, datetime] = {}
 
 class DecisionResponse(BaseModel):
     match_id: str
@@ -56,6 +59,29 @@ def log_decision(decision: dict):
 def get_match_minute(match_id: str, t_event: datetime) -> int:
     # Placeholder for match minute estimation
     return 45 
+
+def _odds_state(mid: str, odds: Odds):
+    hist = odds_history.setdefault(mid, [])
+    hist.append(odds)
+    if len(hist) > 500:
+        odds_history[mid] = hist[-500:]
+
+    odds_prev = hist[-2].price if len(hist) >= 2 else None
+
+    def price_ago(seconds: int):
+        target = odds.t_seen - timedelta(seconds=seconds)
+        for o in reversed(hist):
+            if o.t_seen <= target:
+                return o.price
+        return None
+
+    signal_price = last_signal_price.get(mid)
+    signal_time = last_signal_time.get(mid)
+    signal_age = None
+    if signal_time:
+        signal_age = (datetime.utcnow() - signal_time).total_seconds()
+
+    return odds_prev, signal_price, signal_age, price_ago(5), price_ago(30), price_ago(60)
 
 @app.post("/event", response_model=DecisionResponse)
 async def post_event(event: Event):
@@ -86,7 +112,10 @@ async def post_event(event: Event):
     p95 = float(np.percentile(latencies, 95)) if latencies else 0.0
     
     odds = latest_odds.get(mid)
-    
+    odds_prev, signal_price, signal_age, odds_5s, odds_30s, odds_60s = (None, None, None, None, None, None)
+    if odds:
+        odds_prev, signal_price, signal_age, odds_5s, odds_30s, odds_60s = _odds_state(mid, odds)
+
     state = MatchState(
         match_id=mid,
         minute=get_match_minute(mid, event.t_event),
@@ -95,7 +124,13 @@ async def post_event(event: Event):
         t_event_latest=event.t_event,
         t_recv_latest=event.t_recv,
         event_latency_p95=p95,
-        odds_latency_p95=0.0
+        odds_latency_p95=0.0,
+        odds_price_prev=odds_prev,
+        odds_price_signal=signal_price,
+        odds_signal_age_s=signal_age,
+        odds_price_5s_ago=odds_5s,
+        odds_price_30s_ago=odds_30s,
+        odds_price_60s_ago=odds_60s,
     )
     
     can_bet = False
@@ -109,8 +144,9 @@ async def post_event(event: Event):
         if match_bets_count[mid] >= max_bets:
             can_bet = False
             reason = "MATCH_LIMIT"
+            p_model, ev = 0.0, 0.0
         else:
-            can_bet, reason = engine.evaluate_gates(state, odds, recent)
+            can_bet, reason, p_model, ev = engine.evaluate_gates(state, odds, recent)
             
             if can_bet:
                 exec_res = executor.execute(odds.price)
@@ -130,6 +166,8 @@ async def post_event(event: Event):
                 if exec_res.filled:
                     match_bets_count[mid] += 1
                     logger.info(f"BET PLACED: {mid} {odds.selection} @ {price_filled}")
+                last_signal_price[mid] = odds.price
+                last_signal_time[mid] = datetime.utcnow()
 
     # Create log entry
     log_entry = {
@@ -180,6 +218,7 @@ async def post_odds(odds: Odds):
     latencies = [(e.t_recv - e.t_event).total_seconds() for e in recent]
     p95 = float(np.percentile(latencies, 95)) if latencies else 0.0
     
+    odds_prev, signal_price, signal_age, odds_5s, odds_30s, odds_60s = _odds_state(mid, odds)
     state = MatchState(
         match_id=mid,
         minute=45,
@@ -188,7 +227,13 @@ async def post_odds(odds: Odds):
         t_event_latest=recent[-1].t_event if recent else datetime.utcnow(),
         t_recv_latest=recent[-1].t_recv if recent else datetime.utcnow(),
         event_latency_p95=p95,
-        odds_latency_p95=(odds.t_recv - odds.t_seen).total_seconds()
+        odds_latency_p95=(odds.t_recv - odds.t_seen).total_seconds(),
+        odds_price_prev=odds_prev,
+        odds_price_signal=signal_price,
+        odds_signal_age_s=signal_age,
+        odds_price_5s_ago=odds_5s,
+        odds_price_30s_ago=odds_30s,
+        odds_price_60s_ago=odds_60s,
     )
     
     max_bets = config.get('MAX_BETS_PER_MATCH', 1)
@@ -201,8 +246,9 @@ async def post_odds(odds: Odds):
     if match_bets_count[mid] >= max_bets:
         can_bet = False
         reason = "MATCH_LIMIT"
+        p_model, ev = 0.0, 0.0
     else:
-        can_bet, reason = engine.evaluate_gates(state, odds, recent)
+        can_bet, reason, p_model, ev = engine.evaluate_gates(state, odds, recent)
         if can_bet:
             exec_res = executor.execute(odds.price)
             exec_status = exec_res.reason
@@ -221,6 +267,8 @@ async def post_odds(odds: Odds):
             if exec_res.filled:
                 match_bets_count[mid] += 1
                 logger.info(f"BET PLACED: {mid} {odds.selection} @ {price_filled}")
+            last_signal_price[mid] = odds.price
+            last_signal_time[mid] = datetime.utcnow()
 
     # Create log entry
     log_entry = {

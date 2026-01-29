@@ -29,9 +29,11 @@ def test_full_loop_integration():
         event_latency_p95=p95
     )
 
-    can_bet, reason = engine.evaluate_gates(state, odds, events)
+    can_bet, reason, p_model, ev = engine.evaluate_gates(state, odds, events)
 
     assert isinstance(can_bet, bool)
     assert isinstance(reason, str)
+    assert isinstance(p_model, float)
+    assert isinstance(ev, float)
     assert tps in ["LOW", "MID", "PRESS", "CHAOS"]
     assert reason in ["LATENCY_HIGH", "MARKET_SUSPENDED", "QUALITY_LOW", "EV_LOW", "BET_READY"]

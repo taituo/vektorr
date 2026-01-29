@@ -26,9 +26,32 @@ class PaperWallet:
 
     def __init__(self, config: dict):
         self.balance = config.get('WALLET_START', 1000.0)
-        self.stake = config.get('STAKE', 10.0)
+        self.default_stake = config.get('STAKE', 10.0)
+        self.staking_mode = config.get('STAKING_MODE', 'flat')  # 'flat' or 'kelly'
+        self.kelly_fraction = config.get('KELLY_FRACTION', 0.2)  # 20% of Kelly (safe)
+        self.max_stake_pct = config.get('MAX_STAKE_PCT', 0.05)   # Max 5% of bankroll
         self.trades: List[Trade] = []
         self.log_file = "trade_log.jsonl"
+
+    def calculate_kelly_stake(self, p_model: float, odds: float) -> float:
+        """Calculates stake based on fractional Kelly criterion."""
+        if odds <= 1.0 or p_model <= 0:
+            return 0.0
+        
+        b = odds - 1.0
+        q = 1.0 - p_model
+        
+        # Kelly formula: f* = (bp - q) / b
+        f_star = (b * p_model - q) / b
+        
+        if f_star <= 0:
+            return 0.0
+            
+        # Apply fractional Kelly and max limit
+        stake_pct = f_star * self.kelly_fraction
+        stake_pct = min(stake_pct, self.max_stake_pct)
+        
+        return round(self.balance * stake_pct, 2)
 
     @property
     def total_staked(self) -> float:
@@ -51,7 +74,7 @@ class PaperWallet:
 
     def place_bet(self, match_id: str, minute: int, selection: str,
                   price_seen: float, price_filled: Optional[float],
-                  slippage: float, filled: bool) -> Optional[Trade]:
+                  slippage: float, filled: bool, p_model: float = 0.0) -> Optional[Trade]:
         if not filled:
             trade = Trade(
                 trade_id=uuid.uuid4().hex[:12],
@@ -70,17 +93,23 @@ class PaperWallet:
             self._log(trade)
             return trade
 
-        if self.balance < self.stake:
+        # Determine stake
+        if self.staking_mode == 'kelly' and p_model > 0:
+            current_stake = self.calculate_kelly_stake(p_model, price_filled or price_seen)
+        else:
+            current_stake = self.default_stake
+
+        if current_stake <= 0 or self.balance < current_stake:
             return None
 
-        self.balance -= self.stake
+        self.balance -= current_stake
         trade = Trade(
             trade_id=uuid.uuid4().hex[:12],
             timestamp=datetime.now().isoformat(),
             match_id=match_id,
             minute=minute,
             selection=selection,
-            stake=self.stake,
+            stake=current_stake,
             price_seen=price_seen,
             price_filled=price_filled,
             slippage=slippage,

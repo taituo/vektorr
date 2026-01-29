@@ -88,7 +88,7 @@ def replay_match(events_path: str, odds_path: str, config: dict) -> dict:
             decisions.append({"minute": minute, "decision": "NO_BET", "reason": "MATCH_LIMIT"})
             continue
 
-        can_bet, reason = engine.evaluate_gates(state, odds, recent_events)
+        can_bet, reason, p_model, ev = engine.evaluate_gates(state, odds, recent_events)
 
         if can_bet:
             result = executor.execute(odds.price)

@@ -30,7 +30,7 @@ done
 
 # 2. Mock server
 echo "==> Starting mock server on :9999..."
-python3 "$ROOT/tools/mock_server.py" --port 9999 --matches 3 --speed 2 &
+python3 "$ROOT/tools/mock_server.py" --port 9999 --matches 3 --speed 2 --tempo normal --chaos 0.0 --seed 42 &
 PIDS+=($!)
 sleep 1
 

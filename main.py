@@ -3,7 +3,7 @@ import yaml
 import logging
 import json
 import numpy as np
-from datetime import datetime
+from datetime import datetime, timedelta
 
 from engine import BettingEngine
 from execution import ExecutionStub
@@ -31,6 +31,9 @@ def run_mvp():
     bets_in_match = 0
     max_bets = config.get('MAX_BETS_PER_MATCH', 1)
     provider = MockProvider(match_id=match_id)
+    odds_history = []
+    last_signal_price = None
+    last_signal_time = None
 
     logger.info("Starting MVP Betting System (Paper Trading Mode)")
     logger.info(f"Wallet: {wallet.balance:.2f} | Stake: {wallet.stake:.2f}")
@@ -52,6 +55,21 @@ def run_mvp():
             event_latencies = [(e.t_recv - e.t_event).total_seconds() for e in events]
             p95 = float(np.percentile(event_latencies, 95)) if event_latencies else 0.0
             odds_latency = (odds.t_recv - odds.t_seen).total_seconds()
+            odds_history.append((odds.t_seen, odds.price))
+            if len(odds_history) > 500:
+                odds_history = odds_history[-500:]
+
+            def _price_ago(seconds: int):
+                target = odds.t_seen - timedelta(seconds=seconds)
+                for ts, price in reversed(odds_history):
+                    if ts <= target:
+                        return price
+                return None
+
+            odds_price_prev = odds_history[-2][1] if len(odds_history) >= 2 else None
+            odds_signal_age = None
+            if last_signal_time:
+                odds_signal_age = (datetime.now() - last_signal_time).total_seconds()
 
             state = MatchState(
                 match_id=match_id,
@@ -61,15 +79,22 @@ def run_mvp():
                 t_event_latest=events[-1].t_event if events else datetime.now(),
                 t_recv_latest=datetime.now(),
                 event_latency_p95=p95,
-                odds_latency_p95=odds_latency
+                odds_latency_p95=odds_latency,
+                odds_price_prev=odds_price_prev,
+                odds_price_signal=last_signal_price,
+                odds_signal_age_s=odds_signal_age,
+                odds_price_5s_ago=_price_ago(5),
+                odds_price_30s_ago=_price_ago(30),
+                odds_price_60s_ago=_price_ago(60),
             )
 
             # 3. Match limit gate
             if bets_in_match >= max_bets:
                 reason = "MATCH_LIMIT"
                 can_bet = False
+                p_model, ev = 0.0, 0.0
             else:
-                can_bet, reason = engine.evaluate_gates(state, odds, events)
+                can_bet, reason, p_model, ev = engine.evaluate_gates(state, odds, events)
 
             # 4. Execute if BET_READY
             exec_result = None
@@ -83,10 +108,13 @@ def run_mvp():
                     price_seen=odds.price,
                     price_filled=exec_result.price_filled,
                     slippage=exec_result.slippage,
-                    filled=exec_result.filled
+                    filled=exec_result.filled,
+                    p_model=p_model
                 )
                 if exec_result.filled:
                     bets_in_match += 1
+                last_signal_price = odds.price
+                last_signal_time = datetime.now()
 
             # 5. Audit log
             xg_10m = sum(e.xg for e in events if e.type == "SHOT")
