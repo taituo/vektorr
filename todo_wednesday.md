@@ -1,3 +1,5 @@
+> **Archived snapshot (2026-01-29).** Do not extend this file. Current priorities: **[docs/planning/BACKLOG.md](docs/planning/BACKLOG.md)**.
+
 # TODO Wednesday 29.1.2026
 
 ## Phase 1: Solidify Data Foundation
@@ -48,6 +50,11 @@
 ---
 
 ## Nykytila
+
 - MVP toimii (paper trading, TPS, 5 gatea, lompakko, mock-data)
 - Phase 1 scaffolding aloitettu (spine/, brain/, infra/questdb/)
 - Git repo alustettu 28.1.2026
+
+---
+
+Open follow-ups from this snapshot are tracked in [docs/planning/BACKLOG.md](docs/planning/BACKLOG.md) (themes: Data contract parity, Integration, Execution).

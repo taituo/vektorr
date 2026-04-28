@@ -5,6 +5,8 @@
 
 > **Filosofia:** Jokainen vaihe todistaa arvonsa ennen seuraavaan siirtymistä. Ei "toivotaan että toimii" — vaan "data todistaa että toimii".
 
+**Tactical backlog:** avoin työ teemoittain — [docs/planning/BACKLOG.md](docs/planning/BACKLOG.md).
+
 ---
 
 ## Kokonaiskuva

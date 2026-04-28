@@ -7,6 +7,7 @@ A deterministic, latency-sensitive decision engine for live sports markets. The 
 Doomsignal operates on a **fail-closed** principle. If data quality, latency, or market conditions do not meet defined thresholds, the system defaults to **NO BET**.
 
 ### Core Constraints
+
 - **Determinism:** The decision pipeline is stateless and reproducible. `f(events, odds)` must yield the exact same result in live and replay modes.
 - **Latency Gating:** Hard limits on event-to-decision latency (default 3000ms). Any breach triggers an immediate freeze.
 - **Auditability:** Every tick, decision, and rejection is logged to QuestDB with a specific `reason_code`.
@@ -14,21 +15,29 @@ Doomsignal operates on a **fail-closed** principle. If data quality, latency, or
 
 ## Architecture
 
-| Component | Technology | Responsibility |
-|-----------|------------|----------------|
-| **Spine** | Rust | Ingests WebSocket/Polling feeds, normalizes data, handles IO. |
-| **Brain** | Python | Calculates metrics (TPS, xG), evaluates gates, issues signals. |
-| **Storage** | QuestDB | High-throughput ILP ingestion for events and time-series data. |
-| **Execution** | Python | Manages risk, sizing (Kelly), and staged rollout (Paper $\to$ Live). |
+
+| Component     | Technology | Responsibility                                                       |
+| ------------- | ---------- | -------------------------------------------------------------------- |
+| **Spine**     | Rust       | Ingests WebSocket/Polling feeds, normalizes data, handles IO.        |
+| **Brain**     | Python     | Calculates metrics (TPS, xG), evaluates gates, issues signals.       |
+| **Storage**   | QuestDB    | High-throughput ILP ingestion for events and time-series data.       |
+| **Execution** | Python     | Manages risk, sizing (Kelly), and staged rollout (Paper $\to$ Live). |
+
 
 ## Operational Status
 
-| Module | Status | Notes |
-| :--- | :--- | :--- |
-| **Ingestion** | Ready | SportMonks & Odds API adapters implemented in Rust. |
-| **Logic** | Ready | Phase 2 models (Dynamic Lambda, TPS Velocity) active. |
-| **Safety** | Active | Kill-switches for drawdown and latency spikes enabled. |
-| **Integration** | Pending | Requires API keys and active Docker container to run. |
+
+| Module          | Status  | Notes                                                                                                                   |
+| --------------- | ------- | ----------------------------------------------------------------------------------------------------------------------- |
+| **Ingestion**   | Ready   | SportMonks & Odds API adapters implemented in Rust.                                                                     |
+| **Logic**       | Ready   | Phase 2 models (Dynamic Lambda, TPS Velocity) active.                                                                   |
+| **Safety**      | Active  | Kill-switches for drawdown and latency spikes enabled.                                                                  |
+| **Integration** | Pending | Blocking theme: smoke run with keys + Compose — see [docs/planning/BACKLOG.md](docs/planning/BACKLOG.md) (Integration). |
+
+
+## Planning
+
+Work is tracked in three layers: **[roadmap.md](roadmap.md)** (strategy and phase exits), **[docs/planning/BACKLOG.md](docs/planning/BACKLOG.md)** (thematic backlog), and optional sprint notes under `**docs/planning/`** (see [docs/planning/sprint-TEMPLATE.md](docs/planning/sprint-TEMPLATE.md)).
 
 ## Directory Structure
 
@@ -37,10 +46,12 @@ Doomsignal operates on a **fail-closed** principle. If data quality, latency, or
 - `execution/` - Risk management and order placement logic.
 - `infra/` - Infrastructure configuration (Docker, QuestDB).
 - `tools/` - Utilities for backtesting, simulation, and data analysis.
+- `docs/planning/` - Backlog and sprint templates.
 
 ## Usage
 
 This software is designed for automated operation. Manual intervention is required only for:
+
 1. Configuration changes (`config.yaml`).
 2. Unfreezing the system after a circuit breaker trip.
 3. Reviewing daily performance logs.

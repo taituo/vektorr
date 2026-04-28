@@ -1,5 +1,7 @@
 # After MVP — Phase 1 Bootstrap (2026-01-27)
 
+> **Historical bootstrap log.** Many items below were implemented afterward (HTTP ingest, Brain service, Docker, providers). **Current priorities:** [docs/planning/BACKLOG.md](docs/planning/BACKLOG.md) and [roadmap.md](roadmap.md). Do not treat old “Next steps” as unchecked current work unless they appear in the backlog.
+
 This document captures what was done after the MVP and what should happen next.
 
 ## What was done (summary)
